@@ -47,6 +47,37 @@ horizon_project/
 - Shared functionality in core app
 - Cross-app relationships through model foreign keys
 
+### Deployment Guide for Railway with MySQL
+
+#### 1. Prerequisites
+- A [Railway](https://railway.app/) account
+- Git installed on your machine
+- Your project code pushed to GitHub
+
+#### 2. Setting Up Railway
+1. Log in to Railway and create a new project
+2. Choose "Deploy from GitHub repo" and select your repository
+3. Add a new MySQL service from the Railway dashboard
+4. Connect your MySQL service to your deployment
+
+#### 3. Environment Variables
+Configure the following environment variables in Railway dashboard:
+- `SECRET_KEY` - Your Django secret key
+- `DEBUG` - Set to False for production
+- `SITE_URL` - Your Railway app URL (e.g., https://your-app-name.up.railway.app)
+- `EMAIL_HOST_USER` - Your email for sending notifications
+- `EMAIL_HOST_PASSWORD` - Your email app password
+
+#### 4. Database Migration
+Railway will automatically run your Procfile command. To manually trigger migrations:
+1. Go to Railway dashboard
+2. Open the CLI for your deployment
+3. Run: `python manage.py migrate`
+
+#### 5. Static Files
+Static files are handled by WhiteNoise. To collect static files:
+1. Use Railway CLI: `python manage.py collectstatic --no-input`
+
 ### Key Features and Implementation
 
 #### 1. User Management (users app)
