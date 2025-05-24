@@ -6,4 +6,4 @@ buildCommand = "pip install -r requirements.txt"
 startCommand = "gunicorn horizonh_project_config.wsgi:application"
 healthcheckPath = "/"
 healthcheckTimeout = 100
-restartPolicyType = "on-failure"
+restartPolicyType = "ON_FAILURE"
