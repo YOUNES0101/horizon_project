@@ -1,0 +1,929 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Your Stay - Select Dates{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+<style>
+  :root {
+    /* Define colors if not already defined in base.html */
+    --primary: #0d6efd; /* Example primary color */
+    --primary-rgb: 13, 110, 253;
+    --primary-dark: #0a58ca;
+    --secondary: #6c757d;
+    --success: #198754;
+    --info: #0dcaf0;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --white: #ffffff;
+    --font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --border-radius: 0.375rem;
+    --box-shadow-sm: 0 .125rem .25rem rgba(0, 0, 0, .075);
+    --box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+  }
+
+  body {
+    font-family: var(--font-family-sans-serif);
+    background-color: var(--light);
+    color: var(--dark);
+  }
+
+  .booking-container {
+    max-width: 1140px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
+
+  .booking-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .booking-header h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.75rem;
+  }
+
+  .booking-header p {
+    color: var(--gray);
+    font-size: 1.15rem;
+    margin-bottom: 0;
+  }
+
+  /* Improved Booking Steps */
+  .booking-steps {
+    display: flex;
+    justify-content: space-between; /* Distribute space */
+    align-items: flex-start;
+    margin-bottom: 4rem;
+    position: relative;
+    padding: 0 1rem; /* Add padding for end steps */
+  }
+
+  .booking-steps::before {
+    content: "";
+    position: absolute;
+    top: 1.75rem; /* Align with center of circle */
+    left: 5%; /* Start after first circle */
+    right: 5%; /* End before last circle */
+    height: 4px;
+    background-color: var(--gray-light);
+    z-index: 1;
+  }
+
+  .booking-steps-progress {
+    position: absolute;
+    top: 1.75rem;
+    left: 5%;
+    height: 4px;
+    background-color: var(--success);
+    z-index: 2;
+    transition: width 0.4s ease-in-out;
+    /* Width will be set by JS or based on current step */
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 3;
+    width: 18%; /* Approx width for 5 steps */
+  }
+
+  .step-icon-wrapper {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background-color: var(--white);
+    border: 4px solid var(--gray-light);
+    color: var(--gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+    position: relative; /* For potential checkmark */
+  }
+
+  .step-icon-wrapper i {
+    font-size: 1.5rem;
+  }
+
+  .step.completed .step-icon-wrapper {
+    border-color: var(--success);
+    background-color: var(--success);
+    color: var(--white);
+  }
+
+  .step.active .step-icon-wrapper {
+    border-color: var(--primary);
+    background-color: var(--primary);
+    color: var(--white);
+  }
+
+  .step-label {
+    font-size: 0.9rem;
+    color: var(--gray);
+    font-weight: 500;
+  }
+
+  .step.active .step-label {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .step.completed .step-label {
+    color: var(--success);
+  }
+
+  /* Card Styling */
+  .booking-card {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-sm);
+    border: 1px solid var(--gray-light);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .booking-card:hover {
+    box-shadow: var(--box-shadow);
+  }
+
+  .booking-card-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-light);
+  }
+
+  .booking-card-header h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .booking-card-header p {
+    color: var(--gray);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+  }
+
+  /* Form Elements */
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.9rem;
+  }
+
+  .date-picker-container {
+    margin-bottom: 2rem;
+  }
+
+  .date-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 0.5rem; /* Reduced margin */
+  }
+
+  .date-input-group {
+    position: relative;
+  }
+
+  .date-input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+    pointer-events: none;
+  }
+
+  .date-input {
+    width: 100%;
+    padding: 0.8rem 1rem 0.8rem 2.8rem; /* Increased padding for icon */
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background-color: var(--white);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer; /* Indicate it's clickable */
+  }
+
+  .date-input::placeholder {
+      color: var(--gray);
+      opacity: 0.8;
+  }
+
+  .date-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+    outline: none;
+  }
+
+  /* Flatpickr Calendar Styling Enhancements */
+  .flatpickr-calendar {
+      background-color: var(--white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      border: 1px solid var(--gray-light);
+      width: auto; /* Adjust width as needed */
+      font-family: var(--font-family-sans-serif);
+  }
+  .flatpickr-months .flatpickr-month {
+      background-color: var(--light);
+      color: var(--dark);
+      fill: var(--dark);
+  }
+  .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+      color: var(--primary);
+      fill: var(--primary);
+  }
+  .flatpickr-months .flatpickr-prev-month:hover svg, .flatpickr-months .flatpickr-next-month:hover svg {
+      fill: var(--primary-dark);
+  }
+  .flatpickr-current-month .flatpickr-monthDropdown-months {
+      background-color: var(--white);
+      border: 1px solid var(--gray-light);
+      color: var(--dark);
+  }
+  .flatpickr-current-month input.cur-year {
+      color: var(--dark);
+      font-weight: 600;
+  }
+  .flatpickr-weekdays {
+      background-color: var(--light);
+  }
+  span.flatpickr-weekday {
+      color: var(--gray);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+  }
+  .flatpickr-day {
+      color: var(--dark);
+      border: 1px solid transparent;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  .flatpickr-day:hover {
+      background-color: var(--gray-light);
+  }
+  .flatpickr-day.today {
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+  }
+  .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: var(--white);
+  }
+  .flatpickr-day.startRange {
+      border-radius: var(--border-radius) 0 0 var(--border-radius);
+  }
+  .flatpickr-day.endRange {
+      border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  }
+  .flatpickr-day.inRange {
+      background-color: rgba(var(--primary-rgb), 0.15);
+      border-color: transparent;
+      box-shadow: none;
+      color: var(--primary-dark);
+      border-radius: 0;
+  }
+  .flatpickr-day.startRange.inRange {
+      border-radius: var(--border-radius) 0 0 var(--border-radius);
+  }
+  .flatpickr-day.endRange.inRange {
+      border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  }
+  .flatpickr-day.disabled, .flatpickr-day.disabled:hover {
+      background-color: var(--gray-light) !important; /* Force background */
+      color: var(--secondary) !important; /* Force color */
+      cursor: not-allowed !important;
+      border-color: transparent !important;
+      opacity: 0.6;
+      text-decoration: line-through; /* Add strikethrough */
+  }
+
+  /* Guest Stepper */
+  .guest-selector {
+    margin-bottom: 2rem;
+  }
+
+  .guest-input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    max-width: 180px;
+    overflow: hidden;
+  }
+
+  .guest-stepper-btn {
+    background-color: var(--light);
+    border: none;
+    color: var(--primary);
+    font-size: 1.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    line-height: 1;
+  }
+
+  .guest-stepper-btn:hover {
+    background-color: var(--gray-light);
+  }
+
+  .guest-stepper-btn:disabled {
+      color: var(--gray);
+      cursor: not-allowed;
+      background-color: var(--light);
+  }
+
+  .guest-input {
+    width: 100%;
+    text-align: center;
+    border: none;
+    padding: 0.8rem 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark);
+    /* Remove spinner arrows */
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .guest-input::-webkit-outer-spin-button,
+  .guest-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .guest-input:focus {
+      outline: none;
+  }
+
+  /* Error Messages */
+  .error-message {
+    color: var(--danger);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    min-height: 1.2em; /* Reserve space for error */
+    display: none; /* Hidden by default */
+  }
+
+  .error-message.visible {
+    display: block;
+  }
+
+  /* Summary Card Enhancements */
+  .summary-card {
+      position: sticky;
+      top: 2rem; /* Sticky position for summary */
+  }
+
+  .room-summary {
+    background-color: var(--light);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    border: 1px solid var(--gray-light);
+  }
+
+  .room-summary-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--gray-light);
+  }
+
+  .room-image {
+    width: 90px;
+    height: 70px;
+    border-radius: var(--border-radius);
+    object-fit: cover;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+
+  .room-details h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    color: var(--dark);
+  }
+
+  .room-type {
+    color: var(--gray);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .room-amenities {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .room-amenities-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--dark);
+      margin-bottom: 0.75rem;
+  }
+
+  .amenities-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem 1rem;
+  }
+
+  .room-amenity {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--gray);
+  }
+
+  .room-amenity i {
+      font-size: 1.1rem;
+      margin-right: 0.5rem;
+      color: var(--primary);
+      width: 1.2em;
+      text-align: center;
+  }
+
+  .price-summary {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed var(--gray-light);
+  }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .price-label {
+    color: var(--gray);
+  }
+
+  .price-value {
+    font-weight: 500;
+    color: var(--dark);
+  }
+
+  .price-row.total {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-light);
+  }
+
+  .price-total {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  /* Action Buttons */
+  .booking-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2.5rem;
+    flex-wrap: wrap; /* Wrap buttons on smaller screens */
+    gap: 1rem;
+  }
+
+  .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: var(--border-radius);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+  }
+
+  .btn i {
+      margin-right: 0.5rem;
+      font-size: 1.2em;
+  }
+
+  .btn-back {
+    background-color: transparent;
+    color: var(--gray);
+    border: 1px solid var(--gray-light);
+  }
+
+  .btn-back:hover {
+    background-color: var(--gray-light);
+    color: var(--dark);
+    border-color: var(--gray);
+  }
+
+  .btn-continue {
+    background-color: var(--primary);
+    color: var(--white);
+  }
+
+  .btn-continue:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.25);
+  }
+
+  .btn-continue:disabled {
+    background-color: var(--secondary);
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .summary-card {
+        position: static; /* Remove sticky on smaller screens */
+    }
+  }
+
+  @media (max-width: 768px) {
+    .booking-header h1 {
+        font-size: 2.2rem;
+    }
+    .booking-steps {
+        margin-bottom: 3rem;
+        /* Consider a vertical layout or simplified view for very small screens */
+    }
+    .step-label {
+        font-size: 0.8rem;
+    }
+    .booking-actions {
+      flex-direction: column-reverse; /* Stack buttons with primary on bottom */
+      align-items: stretch;
+    }
+    .btn {
+        width: 100%;
+    }
+  }
+
+  @media (max-width: 576px) {
+      .booking-container {
+          margin-top: 1rem;
+      }
+      .booking-card {
+          padding: 1.5rem;
+      }
+      .date-inputs {
+          gap: 1rem;
+      }
+      .amenities-list {
+          grid-template-columns: 1fr; /* Single column amenities */
+      }
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container booking-container py-4">
+  <!-- Booking Header -->
+  <div class="booking-header">
+    <h1>Book Your Stay</h1>
+    <p>Select your dates and number of guests</p>
+  </div>
+
+  <!-- Booking Steps -->
+  <div class="booking-steps" id="bookingSteps">
+    <!-- Progress Bar -->
+    {# Step 2 of 5: Progress = 5% + (2-1) * (90/4)% = 5% + 22.5% = 27.5% ~ 28% #}
+    <div class="booking-steps-progress" id="progressBar" style="width: 28%;"></div>
+    <!-- Steps -->
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class='bx bx-bed'></i></div>
+      <div class="step-label">Select Room</div>
+    </div>
+    <div class="step active">
+      <div class="step-icon-wrapper"><i class='bx bx-calendar-check'></i></div>
+      <div class="step-label">Choose Dates</div>
+    </div>
+    <div class="step">
+      <div class="step-icon-wrapper"><i class='bx bx-user'></i></div>
+      <div class="step-label">Guest Details</div>
+    </div>
+    <div class="step">
+      <div class="step-icon-wrapper"><i class='bx bx-credit-card'></i></div>
+      <div class="step-label">Payment</div>
+    </div>
+    <div class="step">
+      <div class="step-icon-wrapper"><i class='bx bx-check-double'></i></div>
+      <div class="step-label">Confirmation</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 mb-4 mb-lg-0">
+      <!-- Date Selection Card -->
+      <div class="booking-card">
+        <div class="booking-card-header">
+          <h2>Select Your Stay Dates</h2>
+          <p>Choose your check-in, check-out dates, and number of guests.</p>
+        </div>
+
+        <form id="dateSelectionForm" method="post" action="{% url 'bookings:guest_info' %}">
+          {% csrf_token %}
+          <input type="hidden" name="room_id" value="{{ room.id }}" />
+
+          <div class="date-picker-container">
+            <label class="form-label">Stay Dates</label>
+            <div class="date-inputs">
+              <div class="date-input-group">
+                <i class='bx bx-calendar-alt date-input-icon'></i>
+                <input type="text" id="check_in_date" name="check_in_date" class="date-input" placeholder="Check-in Date" required />
+              </div>
+              <div class="date-input-group">
+                <i class='bx bx-calendar-alt date-input-icon'></i>
+                <input type="text" id="check_out_date" name="check_out_date" class="date-input" placeholder="Check-out Date" required />
+              </div>
+            </div>
+            <div class="error-message" id="dateError"></div>
+          </div>
+
+          <div class="guest-selector">
+            <label for="num_guests" class="form-label">Number of Guests</label>
+            <div class="guest-input-wrapper">
+                <button type="button" class="guest-stepper-btn" id="guestDecrementBtn" aria-label="Decrease guests">-</button>
+                {# Assuming room model does NOT have capacity, use a reasonable default or remove max #}
+                <input type="number" id="num_guests" name="num_guests" class="guest-input" min="1" max="4" value="1" required readonly aria-live="polite" />
+                <button type="button" class="guest-stepper-btn" id="guestIncrementBtn" aria-label="Increase guests">+</button>
+            </div>
+             {# <small class="text-muted d-block mt-1">Max: {{ room.capacity|default:4 }} guests</small> #}
+            <div class="error-message" id="guestError"></div>
+          </div>
+
+          <div class="booking-actions">
+            <a href="{% url 'rooms:rooms_and_suites' %}" class="btn btn-back">
+              <i class='bx bx-arrow-back'></i> Back to Rooms
+            </a>
+            <button type="submit" class="btn btn-continue" id="continueBtn" disabled>
+              Continue <i class='bx bx-right-arrow-alt'></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Room Summary Card -->
+      <div class="booking-card summary-card">
+        <div class="booking-card-header">
+          <h2>Your Selection</h2>
+          <p>Review your room and price</p>
+        </div>
+
+        <div class="room-summary">
+          <div class="room-summary-header">
+            <img src="{{ room.get_image_url }}" alt="Room {{ room.number }}" class="room-image" />
+            <div class="room-details">
+              <h3>Room {{ room.number }}</h3>
+              <div class="room-type">{{ room.get_room_type_display }}</div>
+            </div>
+          </div>
+
+          <div class="room-amenities">
+              <h4 class="room-amenities-title">Amenities</h4>
+              <div class="amenities-list">
+                  {% for amenity_name in room.get_amenity_display %}
+                  <span class="room-amenity">
+                      {# Simple display - Add icons later if needed #}
+                      <i class='bx bx-check-circle' style="color: var(--success);"></i> {{ amenity_name }}
+                  </span>
+                  {% empty %}
+                  <span class="room-amenity text-muted">No specific amenities listed.</span>
+                  {% endfor %}
+              </div>
+          </div>
+
+          <div class="price-summary">
+            <div class="price-row">
+              <span class="price-label">Room Rate:</span>
+              <span class="price-value">${{ room.price|floatformat:2 }} / night</span>
+            </div>
+            <div class="price-row">
+              <span class="price-label">Duration:</span>
+              <span class="price-value" id="duration">0 nights</span>
+            </div>
+            <div class="price-row">
+              <span class="price-label">Subtotal:</span>
+              <span class="price-value" id="subtotal">$0.00</span>
+            </div>
+            <div class="price-row">
+              <span class="price-label">Taxes & Fees (15%):</span>
+              <span class="price-value" id="taxes">$0.00</span>
+            </div>
+            <div class="price-row total">
+              <strong class="price-label">Total:</strong>
+              <strong class="price-total" id="totalPrice">$0.00</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkInInput = document.getElementById('check_in_date');
+    const checkOutInput = document.getElementById('check_out_date');
+    const dateError = document.getElementById('dateError');
+    const continueBtn = document.getElementById('continueBtn');
+    const durationEl = document.getElementById('duration');
+    const subtotalEl = document.getElementById('subtotal');
+    const taxesEl = document.getElementById('taxes');
+    const totalPriceEl = document.getElementById('totalPrice');
+    const guestInput = document.getElementById('num_guests');
+    const guestDecrementBtn = document.getElementById('guestDecrementBtn');
+    const guestIncrementBtn = document.getElementById('guestIncrementBtn');
+    const guestError = document.getElementById('guestError');
+
+    const roomPrice = parseFloat("{{ room.price|default:0 }}");
+    const bookedDates = JSON.parse("{{ booked_dates|escapejs }}");
+    const todayStr = "{{ today }}";
+    const maxGuests = parseInt(guestInput.max || '4'); // Use max from input or default
+
+    let checkInDate = null;
+    let checkOutDate = null;
+
+    // --- Flatpickr Initialization ---
+    const fpCheckin = flatpickr(checkInInput, {
+      altInput: true,
+      altFormat: "F j, Y",
+      dateFormat: "Y-m-d",
+      minDate: todayStr,
+      disable: bookedDates,
+      onChange: function(selectedDates, dateStr, instance) {
+        checkInDate = selectedDates[0] || null;
+        // If check-in is selected, set minDate for check-out picker
+        if (checkInDate) {
+          fpCheckout.set('minDate', new Date(checkInDate.getTime() + 86400000)); // +1 day
+          // If check-out is before new check-in, clear check-out
+          if (checkOutDate && checkOutDate <= checkInDate) {
+            fpCheckout.clear();
+            checkOutDate = null;
+          }
+        } else {
+          // If check-in cleared, reset check-out minDate
+          fpCheckout.set('minDate', todayStr);
+        }
+        validateAndCalculate();
+      },
+      errorHandler: (error) => {
+          console.error("Flatpickr Check-in Error:", error);
+          dateError.textContent = "Error initializing check-in calendar.";
+          dateError.classList.add('visible');
+      }
+    });
+
+    const fpCheckout = flatpickr(checkOutInput, {
+      altInput: true,
+      altFormat: "F j, Y",
+      dateFormat: "Y-m-d",
+      minDate: todayStr, // Initial minDate
+      disable: bookedDates,
+      onChange: function(selectedDates, dateStr, instance) {
+        checkOutDate = selectedDates[0] || null;
+        // If check-out is selected, set maxDate for check-in picker
+        if (checkOutDate) {
+          fpCheckin.set('maxDate', new Date(checkOutDate.getTime() - 86400000)); // -1 day
+        } else {
+          // If check-out cleared, reset check-in maxDate
+          fpCheckin.set('maxDate', null);
+        }
+        validateAndCalculate();
+      },
+      errorHandler: (error) => {
+          console.error("Flatpickr Check-out Error:", error);
+          dateError.textContent = "Error initializing check-out calendar.";
+          dateError.classList.add('visible');
+      }
+    });
+
+    // --- Guest Stepper Logic ---
+    function updateGuestButtons() {
+        const currentGuests = parseInt(guestInput.value);
+        guestDecrementBtn.disabled = currentGuests <= 1;
+        guestIncrementBtn.disabled = currentGuests >= maxGuests;
+    }
+
+    guestDecrementBtn.addEventListener('click', () => {
+        let currentGuests = parseInt(guestInput.value);
+        if (currentGuests > 1) {
+            guestInput.value = currentGuests - 1;
+            updateGuestButtons();
+            validateAndCalculate(); // Recalculate if price depends on guests
+        }
+    });
+
+    guestIncrementBtn.addEventListener('click', () => {
+        let currentGuests = parseInt(guestInput.value);
+        if (currentGuests < maxGuests) {
+            guestInput.value = currentGuests + 1;
+            updateGuestButtons();
+            validateAndCalculate(); // Recalculate if price depends on guests
+        }
+    });
+
+    // --- Validation and Price Calculation ---
+    function validateAndCalculate() {
+      let isValid = true;
+      dateError.textContent = '';
+      dateError.classList.remove('visible');
+      guestError.textContent = '';
+      guestError.classList.remove('visible');
+
+      // Validate Dates
+      if (!checkInDate || !checkOutDate) {
+        isValid = false;
+      } else if (checkOutDate <= checkInDate) {
+        dateError.textContent = 'Check-out date must be after check-in date.';
+        dateError.classList.add('visible');
+        isValid = false;
+      }
+
+      // Validate Guests (basic)
+      const numGuests = parseInt(guestInput.value);
+      if (isNaN(numGuests) || numGuests < 1) {
+          guestError.textContent = 'Number of guests must be at least 1.';
+          guestError.classList.add('visible');
+          isValid = false;
+      } else if (numGuests > maxGuests) {
+          guestError.textContent = `Maximum number of guests is ${maxGuests}.`;
+          guestError.classList.add('visible');
+          isValid = false;
+      }
+
+      // Calculate Price if valid
+      if (isValid) {
+        const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+        const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+        if (nights > 0) {
+          const subtotal = roomPrice * nights;
+          const taxes = subtotal * 0.15;
+          const total = subtotal + taxes;
+
+          durationEl.textContent = `${nights} night${nights > 1 ? 's' : ''}`;
+          subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+          taxesEl.textContent = `$${taxes.toFixed(2)}`;
+          totalPriceEl.textContent = `$${total.toFixed(2)}`;
+        } else {
+          // Reset prices if nights calculation is zero or negative (shouldn't happen with validation)
+          durationEl.textContent = '0 nights';
+          subtotalEl.textContent = '$0.00';
+          taxesEl.textContent = '$0.00';
+          totalPriceEl.textContent = '$0.00';
+          isValid = false; // Cannot proceed with 0 nights
+        }
+      } else {
+        // Reset prices if dates are invalid
+        durationEl.textContent = '0 nights';
+        subtotalEl.textContent = '$0.00';
+        taxesEl.textContent = '$0.00';
+        totalPriceEl.textContent = '$0.00';
+      }
+
+      // Enable/Disable Continue Button
+      continueBtn.disabled = !isValid;
+    }
+
+    // Initial setup
+    updateGuestButtons();
+    validateAndCalculate(); // Initial validation state
+
+  });
+</script>
+{% endblock %}
+

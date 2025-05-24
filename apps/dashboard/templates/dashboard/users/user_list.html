@@ -1,0 +1,1124 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}User Management - HORIZONH{% endblock %}
+{% block header_title %}User Management{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* User List Specific Styles */
+  .user-card {
+    border: none;
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .user-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .user-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 1.5rem auto;
+    transition: all 0.3s ease;
+  }
+
+  .user-card:hover .user-avatar {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.2);
+  }
+
+  .user-role-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+  }
+
+  .user-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    margin-right: 1rem;
+  }
+
+  .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+  }
+
+  .status-active {
+    background-color: var(--success);
+  }
+
+  .status-inactive {
+    background-color: var(--gray);
+  }
+
+  .user-actions {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .user-card:hover .user-actions {
+    opacity: 1;
+  }
+
+
+
+  .filter-card2 {
+    border: none;
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    background-color: white;
+  }
+
+  
+
+  .action-icon {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 50%;
+    color: var(--gray-dark);
+    margin-left: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .action-icon:hover {
+    transform: scale(1.1);
+  }
+
+  .action-icon.edit:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .action-icon.delete:hover {
+    background-color: var(--danger);
+    color: white;
+  }
+
+  /* Filter and Sort Section */
+  .filter-card {
+    border: none;
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    max-height: 100px;
+  }
+
+  .filter-card:hover {
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .filter-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+  }
+
+  .filter-body {
+    padding: 1.5rem;
+  }
+
+  .filter-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .filter-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .filter-reset {
+    font-size: 0.8rem;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .filter-reset:hover {
+    text-decoration: underline;
+  }
+
+  .form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  /* List View Styles */
+  .list-view .user-card {
+    display: flex;
+    flex-direction: row;
+    height: auto;
+    padding: 1rem;
+  }
+
+  .list-view .user-avatar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+  }
+
+  .list-view .user-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .list-view .user-card .card-body {
+    flex: 1;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Batch Actions */
+  .batch-actions {
+    display: none;
+    margin-bottom: 1rem;
+  }
+
+  .batch-actions.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* User Selection */
+  .user-select {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 3;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .selection-mode .user-select {
+    opacity: 1;
+  }
+
+  /* Status Toggle */
+  .status-toggle {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+  }
+
+  .status-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .toggle-slider {
+    background-color: var(--success);
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+  }
+
+  /* Animation Classes */
+  .animate-pop-in {
+    animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  @keyframes popIn {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+  .delay-6 { animation-delay: 0.6s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header with Actions -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+      <h1 class="h3 mb-0 text-gray-800 font-weight-bold animate-pop-in">User Management</h1>
+      <p class="mb-0 text-muted animate-pop-in delay-1">Manage all system users and their permissions</p>
+    </div>
+    <div class="col-md-6 text-md-end animate-pop-in delay-2">
+      <button id="toggleSelectionBtn" class="btn btn-outline-secondary me-2">
+        <i class="bx bx-select-multiple me-1"></i> Select Users
+      </button>
+        <a href="{% url 'dashboard:user_add' %}" class="btn btn-primary">
+        <i class="bx bx-user-plus me-1"></i> Add New User
+      </a>
+    </div>
+  </div>
+
+  <!-- Batch Actions (Hidden by default) -->
+  <div id="batchActions" class="batch-actions mb-4">
+    <div class="card shadow-sm">
+      <div class="card-body d-flex align-items-center">
+        <span class="me-3"><span id="selectedCount">0</span> users selected</span>
+        <button class="btn btn-sm btn-outline-primary me-2" id="activateBtn">
+          <i class="bx bx-check-circle me-1"></i> Activate
+        </button>
+        <button class="btn btn-sm btn-outline-warning me-2" id="deactivateBtn">
+          <i class="bx bx-x-circle me-1"></i> Deactivate
+        </button>
+        <button class="btn btn-sm btn-outline-danger me-2" id="deleteSelectedBtn">
+          <i class="bx bx-trash me-1"></i> Delete Selected
+        </button>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" id="cancelSelectionBtn">
+          <i class="bx bx-x me-1"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3 mb-4">
+      <div class="filter-card2 animate-pop-in delay-3">
+        <div class="filter-header">
+          <i class="bx bx-filter-alt me-2"></i> Filter Users
+        </div>
+        <div class="filter-body">
+          <!-- Role Filter -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <span>Role</span>
+              <span class="filter-reset" data-filter="role">Reset</span>
+            </div>
+            <div class="mb-3">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" value="admin" id="role_admin" name="role">
+                <label class="form-check-label" for="role_admin">
+                  Administrator
+                  <span class="badge bg-light text-dark ms-1">
+                    {{ admin_count|default:"0" }}
+                  </span>
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" value="staff" id="role_staff" name="role">
+                <label class="form-check-label" for="role_staff">
+                  Staff
+                  <span class="badge bg-light text-dark ms-1">
+                    {{ staff_count|default:"0" }}
+                  </span>
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" value="user" id="role_user" name="role">
+                <label class="form-check-label" for="role_user">
+                  Regular User
+                  <span class="badge bg-light text-dark ms-1">
+                    {{ user_count|default:"0" }}
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <span>Status</span>
+              <span class="filter-reset" data-filter="status">Reset</span>
+            </div>
+            <div class="mb-3">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="status" id="status_all" value="all" checked>
+                <label class="form-check-label" for="status_all">
+                  All Users
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="status" id="status_active" value="active">
+                <label class="form-check-label" for="status_active">
+                  Active Only
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="status" id="status_inactive" value="inactive">
+                <label class="form-check-label" for="status_inactive">
+                  Inactive Only
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date Filter -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <span>Last Login</span>
+              <span class="filter-reset" data-filter="last_login">Reset</span>
+            </div>
+            <div class="mb-3">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="last_login" id="login_all" value="all" checked>
+                <label class="form-check-label" for="login_all">
+                  Any Time
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="last_login" id="login_today" value="today">
+                <label class="form-check-label" for="login_today">
+                  Today
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="last_login" id="login_week" value="week">
+                <label class="form-check-label" for="login_week">
+                  This Week
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="last_login" id="login_month" value="month">
+                <label class="form-check-label" for="login_month">
+                  This Month
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="last_login" id="login_never" value="never">
+                <label class="form-check-label" for="login_never">
+                  Never Logged In
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button id="applyFiltersBtn" class="btn btn-primary w-100">
+            <i class="bx bx-filter me-1"></i> Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Listings -->
+    <div class="col-lg-9">
+      <!-- Results Header -->
+      <div class="card filter-card mb-4 animate-pop-in delay-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-0">{{ users.count }} Users Found</h5>
+            <p class="text-muted small mb-0">Showing all system users</p>
+          </div>
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <label for="sortOptions" class="form-label visually-hidden">Sort by</label>
+              <select class="form-select form-select-sm" id="sortOptions">
+                <option selected value="username">Sort by: Username</option>
+                <option value="email">Email</option>
+                <option value="date_joined">Date Joined</option>
+                <option value="last_login">Last Login</option>
+              </select>
+            </div>
+            <div class="btn-group" role="group" aria-label="View toggle">
+              <button type="button" class="btn btn-outline-secondary active" id="gridViewBtn">
+                <i class="bx bx-grid-alt"></i>
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="listViewBtn">
+                <i class="bx bx-list-ul"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Grid View -->
+      <div class="user-grid-view">
+        <div class="row g-4" id="usersContainer">
+          {% for user in users %}
+          <div class="col-md-6 col-xl-4 animate-pop-in delay-{{ forloop.counter|add:4|divisibleby:6|add:1 }}">
+            <div class="card user-card">
+              <div class="position-relative">
+                <div class="user-select">
+                  <input type="checkbox" class="form-check-input user-checkbox" data-user-id="{{ user.id }}">
+                </div>
+                <div class="user-role-badge">
+                  {% if user.is_superuser %}
+                    <span class="badge bg-danger">Admin</span>
+                  {% elif user.is_staff %}
+                    <span class="badge bg-primary">Staff</span>
+                  {% else %}
+                    <span class="badge bg-secondary">User</span>
+                  {% endif %}
+                </div>
+                <div class="user-avatar">
+                  {% if user.first_name %}
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                  {% else %}
+                    {{ user.username|first|upper }}
+                  {% endif %}
+                </div>
+                <div class="user-actions">
+                  <a href="{% url 'dashboard:user_edit' user.id %}" class="action-icon edit">
+                    <i class="bx bx-edit"></i>
+                  </a>
+                  <a href="{% url 'dashboard:user_delete' user.id %}" class="action-icon delete">
+                    <i class="bx bx-trash"></i>
+                  </a>
+                </div>
+              </div>
+              <div class="card-body text-center">
+                <h5 class="card-title mb-1">
+                  {% if user.get_full_name %}
+                    {{ user.get_full_name }}
+                  {% else %}
+                    {{ user.username }}
+                  {% endif %}
+                </h5>
+                <p class="text-muted mb-2">{{ user.email }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                  <div class="user-status">
+                    <span class="status-indicator {% if user.is_active %}status-active{% else %}status-inactive{% endif %}"></span>
+                    <span>{{ user.is_active|yesno:"Active,Inactive" }}</span>
+                  </div>
+                  <div class="status-toggle">
+                    <input type="checkbox" {% if user.is_active %}checked{% endif %} data-user-id="{{ user.id }}" class="status-checkbox">
+                    <span class="toggle-slider"></span>
+                  </div>
+                </div>
+                <div class="text-muted small mt-2">
+                  <i class="bx bx-time me-1"></i> Last login:
+                  {% if user.last_login %}
+                    {{ user.last_login|date:"M d, Y" }}
+                  {% else %}
+                    Never
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-12">
+            <div class="alert alert-info">
+              <i class="bx bx-info-circle me-2"></i> No users found matching your criteria. Please try adjusting your filters.
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- User List View (hidden by default) -->
+      <div class="user-list-view d-none">
+        {% for user in users %}
+        <div class="card user-card mb-3 animate-pop-in delay-{{ forloop.counter|add:4|divisibleby:6|add:1 }}">
+          <div class="row g-0">
+            <div class="col-md-2 position-relative">
+              <div class="user-select">
+                <input type="checkbox" class="form-check-input user-checkbox" data-user-id="{{ user.id }}">
+              </div>
+              <div class="user-avatar-container">
+                <div class="user-avatar">
+                  {% if user.first_name %}
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                  {% else %}
+                    {{ user.username|first|upper }}
+                  {% endif %}
+                </div>
+                <div class="user-role-badge mb-2">
+                  {% if user.is_superuser %}
+                      <span class="badge bg-danger">Admin</span>
+                  {% elif user.is_staff %}
+                    <span class="badge bg-primary mr-2">Staff</span>
+                  {% else %}
+                    <span class="badge bg-secondary">User</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="col-md-10">
+              <div class="card-body position-relative">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h5 class="card-title">
+                      {% if user.get_full_name %}
+                        {{ user.get_full_name }}
+                      {% else %}
+                        {{ user.username }}
+                      {% endif %}
+                    </h5>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <div class="user-status me-3">
+                      <span class="status-indicator {% if user.is_active %}status-active{% else %}status-inactive{% endif %}"></span>
+                      <span>{{ user.is_active|yesno:"Active,Inactive" }}</span>
+                    </div>
+                    <div class="status-toggle">
+                      <input type="checkbox" {% if user.is_active %}checked{% endif %} data-user-id="{{ user.id }}" class="status-checkbox">
+                      <span class="toggle-slider"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                  <div class="text-muted small">
+                    <i class="bx bx-calendar me-1"></i> Joined: {{ user.date_joined|date:"M d, Y" }}
+                    <span class="mx-2">|</span>
+                    <i class="bx bx-time me-1"></i> Last login:
+                    {% if user.last_login %}
+                      {{ user.last_login|date:"M d, Y" }}
+                    {% else %}
+                      Never
+                    {% endif %}
+                  </div>
+
+                  <div>
+                    <a href="{% url 'dashboard:user_edit' user.id %}" class="btn btn-sm btn-outline-primary me-2">
+                      <i class="bx bx-edit me-1"></i> Edit
+                    </a>
+                    <a href="{% url 'dashboard:user_delete' user.id %}" class="btn btn-sm btn-outline-danger">
+                      <i class="bx bx-trash me-1"></i> Delete
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+          <i class="bx bx-info-circle me-2"></i> No users found matching your criteria. Please try adjusting your filters.
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if users.count > 0 and users.paginator.num_pages > 1 %}
+      <nav aria-label="Page navigation" class="mt-4 animate-pop-in delay-6">
+        <ul class="pagination justify-content-center">
+          {% if users.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ users.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% endif %}
+
+          {% for i in users.paginator.page_range %}
+            {% if users.number == i %}
+              <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if users.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ users.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteModalText">Are you sure you want to delete the selected users? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Toggle between grid and list view
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const gridView = document.querySelector('.user-grid-view');
+    const listView = document.querySelector('.user-list-view');
+
+    gridViewBtn.addEventListener('click', function() {
+      gridViewBtn.classList.add('active');
+      listViewBtn.classList.remove('active');
+      gridView.classList.remove('d-none');
+      listView.classList.add('d-none');
+      localStorage.setItem('userViewPreference', 'grid');
+    });
+
+    listViewBtn.addEventListener('click', function() {
+      listViewBtn.classList.add('active');
+      gridViewBtn.classList.remove('active');
+      listView.classList.remove('d-none');
+      gridView.classList.add('d-none');
+      localStorage.setItem('userViewPreference', 'list');
+    });
+
+    // Check for saved view preference
+    const savedView = localStorage.getItem('userViewPreference');
+    if (savedView === 'list') {
+      listViewBtn.click();
+    }
+
+    // User selection mode
+    const toggleSelectionBtn = document.getElementById('toggleSelectionBtn');
+    const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
+    const batchActions = document.getElementById('batchActions');
+    const usersContainer = document.getElementById('usersContainer');
+    const selectedCount = document.getElementById('selectedCount');
+
+    toggleSelectionBtn.addEventListener('click', function() {
+      document.body.classList.add('selection-mode');
+      batchActions.classList.add('active');
+      toggleSelectionBtn.classList.add('d-none');
+    });
+
+    cancelSelectionBtn.addEventListener('click', function() {
+      document.body.classList.remove('selection-mode');
+      batchActions.classList.remove('active');
+      toggleSelectionBtn.classList.remove('d-none');
+
+      // Uncheck all checkboxes
+      document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+
+      updateSelectedCount();
+    });
+
+    // Update selected count
+    function updateSelectedCount() {
+      const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+      selectedCount.textContent = checkedBoxes.length;
+
+      // Enable/disable batch action buttons based on selection
+      const batchButtons = document.querySelectorAll('#batchActions button:not(#cancelSelectionBtn)');
+      batchButtons.forEach(button => {
+        button.disabled = checkedBoxes.length === 0;
+      });
+    }
+
+    // Listen for checkbox changes
+    document.addEventListener('change', function(e) {
+      if (e.target.classList.contains('user-checkbox')) {
+        updateSelectedCount();
+      }
+    });
+
+    // Batch delete button
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const deleteModalText = document.getElementById('deleteModalText');
+
+    deleteSelectedBtn.addEventListener('click', function() {
+      const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+      const userIds = Array.from(checkedBoxes).map(checkbox => checkbox.dataset.userId);
+
+      if (userIds.length === 0) return;
+
+      deleteModalText.textContent = `Are you sure you want to delete ${userIds.length} selected user(s)? This action cannot be undone.`;
+      deleteModal.show();
+
+      // Store selected user IDs for the confirm button
+      confirmDeleteBtn.dataset.userIds = JSON.stringify(userIds);
+    });
+
+    // Confirm delete button
+    confirmDeleteBtn.addEventListener('click', function() {
+      const userIds = JSON.parse(this.dataset.userIds || '[]');
+
+      if (userIds.length === 0) {
+        deleteModal.hide();
+        return;
+      }
+
+      // In a real implementation, you would send an AJAX request to delete the users
+      console.log('Deleting users:', userIds);
+
+      // Simulate deletion (in a real app, you'd make an AJAX call)
+      fetch('/dashboard/users/batch-delete/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({user_ids: userIds})
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Remove deleted users from the DOM
+          userIds.forEach(id => {
+            const userElements = document.querySelectorAll(`.user-card:has(.user-checkbox[data-user-id="${id}"])`);
+            userElements.forEach(el => el.remove());
+          });
+
+          // Show success message
+          showToast('Success', `${userIds.length} user(s) deleted successfully.`, 'success');
+        } else {
+          showToast('Error', data.message || 'Failed to delete users.', 'danger');
+        }
+
+        // Reset selection mode
+        cancelSelectionBtn.click();
+        deleteModal.hide();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Error', 'An error occurred while deleting users.', 'danger');
+        deleteModal.hide();
+      });
+    });
+
+    // Batch activation/deactivation buttons
+    const activateBtn = document.getElementById('activateBtn');
+    const deactivateBtn = document.getElementById('deactivateBtn');
+
+    activateBtn.addEventListener('click', function() {
+      updateStatus(true);
+    });
+
+    deactivateBtn.addEventListener('click', function() {
+      updateStatus(false);
+    });
+
+    function updateStatus(isActive) {
+      const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+      const userIds = Array.from(checkedBoxes).map(checkbox => checkbox.dataset.userId);
+
+      if (userIds.length === 0) return;
+
+      // In a real implementation, you would send an AJAX request to update status
+      console.log(`Setting ${userIds.length} users to ${isActive ? 'active' : 'inactive'}`);
+
+      // Simulate update (in a real app, you'd make an AJAX call)
+      fetch('/dashboard/users/batch-update-status/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({user_ids: userIds, is_active: isActive})
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update status toggles in the UI
+          userIds.forEach(id => {
+            const statusToggles = document.querySelectorAll(`.status-checkbox[data-user-id="${id}"]`);
+            statusToggles.forEach(toggle => {
+              toggle.checked = isActive;
+            });
+
+            // Update status indicators
+            const statusIndicators = document.querySelectorAll(`.user-card:has(.user-checkbox[data-user-id="${id}"]) .status-indicator`);
+            statusIndicators.forEach(indicator => {
+              if (isActive) {
+                indicator.classList.remove('status-inactive');
+                indicator.classList.add('status-active');
+              } else {
+                indicator.classList.remove('status-active');
+                indicator.classList.add('status-inactive');
+              }
+            });
+
+            // Update status text
+            const statusTexts = document.querySelectorAll(`.user-card:has(.user-checkbox[data-user-id="${id}"]) .user-status span:last-child`);
+            statusTexts.forEach(text => {
+              text.textContent = isActive ? 'Active' : 'Inactive';
+            });
+          });
+
+          // Show success message
+          showToast('Success', `${userIds.length} user(s) ${isActive ? 'activated' : 'deactivated'} successfully.`, 'success');
+        } else {
+          showToast('Error', data.message || 'Failed to update user status.', 'danger');
+        }
+
+        // Reset selection mode
+        cancelSelectionBtn.click();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Error', 'An error occurred while updating status.', 'danger');
+      });
+    }
+
+    // Individual status toggle
+    document.addEventListener('change', function(e) {
+      if (e.target.classList.contains('status-checkbox')) {
+        const userId = e.target.dataset.userId;
+        const isActive = e.target.checked;
+
+        // In a real implementation, you would send an AJAX request to update status
+        console.log(`Setting user ${userId} to ${isActive ? 'active' : 'inactive'}`);
+
+        // Simulate update (in a real app, you'd make an AJAX call)
+        fetch(`/dashboard/users/${userId}/update-status/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({is_active: isActive})
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Update all toggles for this user
+            const statusToggles = document.querySelectorAll(`.status-checkbox[data-user-id="${userId}"]`);
+            statusToggles.forEach(toggle => {
+              toggle.checked = isActive;
+            });
+
+            // Update status indicators
+            const statusIndicators = document.querySelectorAll(`.user-card:has(.status-checkbox[data-user-id="${userId}"]) .status-indicator`);
+            statusIndicators.forEach(indicator => {
+              if (isActive) {
+                indicator.classList.remove('status-inactive');
+                indicator.classList.add('status-active');
+              } else {
+                indicator.classList.remove('status-active');
+                indicator.classList.add('status-inactive');
+              }
+            });
+
+            // Update status text
+            const statusTexts = document.querySelectorAll(`.user-card:has(.status-checkbox[data-user-id="${userId}"]) .user-status span:last-child`);
+            statusTexts.forEach(text => {
+              text.textContent = isActive ? 'Active' : 'Inactive';
+            });
+
+            showToast('Success', `User ${data.username} ${isActive ? 'activated' : 'deactivated'} successfully.`, 'success');
+          } else {
+            // Revert the toggle if the update failed
+            e.target.checked = !isActive;
+            showToast('Error', data.message || 'Failed to update user status.', 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // Revert the toggle if there was an error
+          e.target.checked = !isActive;
+          showToast('Error', 'An error occurred while updating status.', 'danger');
+        });
+      }
+    });
+
+    // Filter reset buttons
+    document.querySelectorAll('.filter-reset').forEach(button => {
+      button.addEventListener('click', function() {
+        const filterType = this.dataset.filter;
+
+        // Reset checkboxes for this filter type
+        document.querySelectorAll(`input[name="${filterType}"]`).forEach(input => {
+          if (input.type === 'checkbox') {
+            input.checked = false;
+          } else if (input.type === 'radio' && (input.value === 'all' || input.id === `${filterType}_all`)) {
+            input.checked = true;
+          }
+        });
+      });
+    });
+
+    // Apply filters button
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+
+    applyFiltersBtn.addEventListener('click', function() {
+      // Build filter query
+      const params = new URLSearchParams();
+
+      // Roles
+      const roles = Array.from(document.querySelectorAll('input[name="role"]:checked')).map(input => input.value);
+      roles.forEach(role => params.append('role', role));
+
+      // Status
+      const status = document.querySelector('input[name="status"]:checked').value;
+      if (status !== 'all') {
+        params.append('status', status);
+      }
+
+      // Last login
+      const lastLogin = document.querySelector('input[name="last_login"]:checked').value;
+      if (lastLogin !== 'all') {
+        params.append('last_login', lastLogin);
+      }
+
+      // Sort option
+      const sortOption = document.getElementById('sortOptions').value;
+      params.append('sort', sortOption);
+
+      // Redirect with filters
+      window.location.href = `?${params.toString()}`;
+    });
+
+    // Sort dropdown
+    const sortOptions = document.getElementById('sortOptions');
+
+    sortOptions.addEventListener('change', function() {
+      // Get current URL parameters
+      const params = new URLSearchParams(window.location.search);
+
+      // Update or add sort parameter
+      params.set('sort', this.value);
+
+      // Redirect with updated sort
+      window.location.href = `?${params.toString()}`;
+    });
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // Toast notification function
+    function showToast(title, message, type) {
+      // Create toast container if it doesn't exist
+      let toastContainer = document.querySelector('.toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+      }
+
+      // Create toast element
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+
+      // Toast content
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <strong>${title}</strong>: ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+
+      // Add to container
+      toastContainer.appendChild(toastEl);
+
+      // Initialize and show toast
+      const toast = new bootstrap.Toast(toastEl, {
+        autohide: true,
+        delay: 5000
+      });
+      toast.show();
+
+      // Remove from DOM after hiding
+      toastEl.addEventListener('hidden.bs.toast', function() {
+        toastEl.remove();
+      });
+    }
+  });
+</script>
+{% endblock %}

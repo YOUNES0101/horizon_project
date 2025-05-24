@@ -1,0 +1,213 @@
+{% extends "dashboard/base.html" %}
+ {% comment %} Adjust path if base.html is elsewhere {% endcomment %}
+{% load static %}
+{% load template_filter %} {% comment %} Assuming you have custom filters {% endcomment %}
+
+{% block title %}Booking {{ booking.booking_number }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="page-title">Booking Detail: {{ booking.booking_number }}</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb ms-1">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard_home' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard:booking_list' %}">Bookings</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ booking.booking_number }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url 'dashboard:booking_list' %}" class="btn btn-outline-secondary me-2">
+                        <i class="bx bx-arrow-back me-1"></i> Back to List
+                    </a>
+                    {% if booking.status == 'confirmed' or booking.status == 'pending' %}
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelBookingModal" data-booking-id="{{ booking.pk }}" data-booking-number="{{ booking.booking_number }}">
+                        <i class="bx bx-x-circle me-1"></i> Cancel Booking
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Details Card -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Booking Information</h5>
+                        <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% elif booking.status == 'completed' %}secondary{% else %}info{% endif %}-soft text-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% elif booking.status == 'completed' %}secondary{% else %}info{% endif %}">
+                            {{ booking.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong class="d-block text-muted mb-1">Booking Number:</strong>
+                                <p>{{ booking.booking_number }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong class="d-block text-muted mb-1">Booked On:</strong>
+                                <p>{{ booking.created_at|date:"Y-m-d H:i" }}</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong class="d-block text-muted mb-1">Check-in Date:</strong>
+                                <p>{{ booking.check_in_date|date:"l, F j, Y" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong class="d-block text-muted mb-1">Check-out Date:</strong>
+                                <p>{{ booking.check_out_date|date:"l, F j, Y" }}</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong class="d-block text-muted mb-1">Duration of Stay:</strong>
+                                <p>{{ booking.duration }} day{{ booking.duration|pluralize }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong class="d-block text-muted mb-1">Number of Guests:</strong>
+                                <p>{{ booking.num_guests }}</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong class="d-block text-muted mb-1">Total Price:</strong>
+                                <p class="h5 text-primary">${{ booking.total_price|floatformat:2 }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong class="d-block text-muted mb-1">Payment Status:</strong>
+                                <p>
+                                    <span class="badge bg-{% if booking.payment_status %}success{% else %}warning{% endif %}">
+                                        {% if booking.payment_status %}Paid{% else %}Pending{% endif %}
+                                    </span>
+                                    {% if booking.payment_method %}
+                                        <span class="text-muted ms-1">({{ booking.get_payment_method_display }})</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% if booking.special_requests %}
+                        <hr>
+                        <div>
+                            <strong class="d-block text-muted mb-1">Special Requests:</strong>
+                            <p>{{ booking.special_requests|linebreaksbr }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Guest Details Card -->
+                <div class="card mb-4" style="height: 400px; margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h5 class="card-title ">Guest Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <strong class="d-block text-muted mb-1">Name:</strong>
+                        <p>{{ booking.guest_name }}</p>
+                        <strong class="d-block text-muted mb-1">Email:</strong>
+                        <p><a href="mailto:{{ booking.guest_email }}">{{ booking.guest_email }}</a></p>
+                        <strong class="d-block text-muted mb-1">Phone:</strong>
+                        <p>{{ booking.guest_phone }}</p>
+                        {% if booking.user %}
+                        <hr>
+                        <strong class="d-block text-muted mb-1">Associated User:</strong>
+                        <p>
+                            <a href="#">{% comment %} Link to user profile if available {% endcomment %}
+                                {{ booking.user.get_full_name|default:booking.user.username }}
+                            </a>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Room Details Card -->
+                <div class="card " style="height: 600px;">
+                    <div class="card-header">
+                        <h5 class="card-title ">Room Information</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if booking.room.image %}
+                        <img src="{{ booking.room.get_image_url }}" alt="Room {{ booking.room.number }}" class="img-fluid rounded mb-3">
+                        {% endif %}
+                        <strong class="d-block text-muted mb-1">Room Number:</strong>
+                        <p><a href="{% url 'dashboard:room_edit' booking.room.pk %}">Room {{ booking.room.number }}</a></p> {% comment %} Link to room edit page {% endcomment %}
+                        <strong class="d-block text-muted mb-1">Room Type:</strong>
+                        <p>{{ booking.room.get_room_type_display }}</p>
+                        <strong class="d-block text-muted mb-1">Floor:</strong>
+                        <p>{{ booking.room.floor }}</p>
+                        <strong class="d-block text-muted mb-1">Price per Night:</strong>
+                        <p>${{ booking.room.price|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Booking Modal (Include if not already in base template) -->
+{% comment %} Assuming the modal from booking_list.html is available or included in base.html {% endcomment %}
+{% comment %}
+<div class="modal fade" id="cancelBookingModal" tabindex="-1" aria-labelledby="cancelBookingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cancelBookingModalLabel">Confirm Cancellation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="cancelBookingForm" method="post" action=""> <!-- Action URL set by JS -->
+        {% csrf_token %}
+        <div class="modal-body">
+          <p>Are you sure you want to cancel booking <strong id="modalBookingNumber">#</strong>?</p>
+          <div class="mb-3">
+            <label for="cancelReason" class="form-label">Reason (Required for dashboard cancellation)</label>
+            <textarea class="form-control" id="cancelReason" name="reason" rows="3" required></textarea>
+          </div>
+          <p class="text-danger"><small>This action cannot be undone. The guest may be notified.</small></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endcomment %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% comment %} Include JS for modal if not already handled globally {% endcomment %}
+<script>
+    const cancelBookingModal = document.getElementById('cancelBookingModal');
+    if (cancelBookingModal) {
+        cancelBookingModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            const bookingId = button.getAttribute('data-booking-id');
+            const bookingNumber = button.getAttribute('data-booking-number');
+            const modalTitle = cancelBookingModal.querySelector('.modal-title');
+            const modalBookingNumber = cancelBookingModal.querySelector('#modalBookingNumber'); // Make sure this ID exists in your modal
+            const form = cancelBookingModal.querySelector('#cancelBookingForm');
+
+            // Construct the cancel URL dynamically
+            const cancelUrl = `/dashboard/bookings/${bookingId}/cancel/`; // Adjust if your URL structure differs
+
+            modalTitle.textContent = `Confirm Cancellation for Booking ${bookingNumber}`;
+            if (modalBookingNumber) {
+              modalBookingNumber.textContent = bookingNumber;
+            }
+            form.action = cancelUrl;
+        });
+    }
+</script>
+{% endblock %}
+

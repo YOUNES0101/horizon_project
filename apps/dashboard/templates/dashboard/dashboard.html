@@ -1,0 +1,749 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Dashboard- HORIZONH{% endblock %} {% block header_title %}Dashboard Overview{% endblock%} {% block extra_css %}
+<style>
+  /* Enhanced Stat Cards */
+  .stat-card {
+    border: none; /* Remove default card border if not desired */
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--card-shadow); /* Use theme shadow */
+  }
+
+  .stat-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--card-hover-shadow); /* Use theme hover shadow */
+  }
+
+  .stat-card .card-body {
+    padding: 1.75rem; /* Slightly more padding */
+  }
+
+  .stat-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem; /* Softer radius */
+    font-size: 1.8rem; /* Larger icon */
+    margin-bottom: 1.25rem;
+    transition: all 0.3s ease;
+    background-color: rgba(var(--primary-rgb), 0.08); /* Subtle background */
+    color: var(--primary);
+  }
+
+  .stat-card:hover .stat-icon-wrapper {
+    transform: rotate(-8deg) scale(1.1);
+    box-shadow: 0 6px 12px rgba(var(--primary-rgb), 0.2);
+  }
+
+  .stat-value {
+    font-size: 2.25rem; /* Larger value */
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    font-family: var(--font-heading);
+    color: var(--dark);
+  }
+
+  .stat-label {
+    color: var(--gray);
+    font-size: 0.95rem; /* Slightly larger label */
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-card .progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    overflow: visible; /* Allow glow from progress bar */
+  }
+  .stat-card .progress-bar {
+    border-radius: 3px;
+    transition: width 0.5s ease-in-out;
+  }
+  .stat-card .progress-bar.bg-success {
+    box-shadow: 0 0 10px rgba(var(--success-rgb, 45, 147, 108), 0.5);
+  } /* Green glow */
+  .stat-card .progress-bar.bg-primary {
+    box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
+  }
+  .stat-card .progress-bar.bg-warning {
+    box-shadow: 0 0 10px rgba(var(--warning-rgb, 212, 162, 90), 0.5);
+  } /* Amber glow */
+  .stat-card .progress-bar.bg-info {
+    box-shadow: 0 0 10px rgba(var(--info-rgb, 92, 135, 182), 0.5);
+  } /* Steel Blue glow */
+
+  /* Chart Containers */
+  .chart-card {
+    /* Apply to card containing chart */
+    border: none;
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .chart-card:hover {
+    box-shadow: var(--card-hover-shadow);
+  }
+  .chart-card .card-header {
+    background-color: transparent; /* Cleaner header */
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+  }
+  .chart-card .card-title {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    color: var(--dark);
+  }
+
+  .revenue-chart-container,
+  .occupancy-chart-container {
+    /* Specific containers for charts */
+    height: 320px; /* Slightly taller */
+    padding-top: 1rem; /* Space for legend if on top */
+  }
+
+  /* Modernized Recent Activity */
+  .list-group-activity .list-group-item {
+    border: none;
+    border-left: 4px solid transparent;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    border-radius: var(--border-radius);
+    background-color: var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+  }
+
+  .list-group-activity .list-group-item:hover {
+    transform: translateX(5px) scale(1.01);
+    border-left-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.1);
+    background-color: var(
+      --sidebar-active-bg
+    ); /* Use a theme color for hover */
+  }
+
+  .list-group-activity .activity-title {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.25rem;
+  }
+  .list-group-activity .activity-description {
+    font-size: 0.9rem;
+    color: var(--gray);
+  }
+  .list-group-activity .activity-time {
+    font-size: 0.8rem;
+    color: var(--gray-dark);
+  }
+
+  /* Room Status - Progress Bar emphasis */
+  .room-status-card .progress {
+    height: 10px;
+    border-radius: 5px;
+  }
+  .room-status-card .progress-bar {
+    transition: width 0.6s ease-out;
+  }
+  .room-status-card .stat-item {
+    transition: transform 0.3s ease;
+  }
+  .room-status-card .stat-item:hover {
+    transform: translateY(-3px);
+  }
+  .room-status-card .stat-item h3 {
+    font-family: var(--font-heading);
+    color: var(--dark);
+  }
+  .room-status-card .stat-item p {
+    font-size: 0.9rem;
+  }
+
+  /* General Animations */
+  .animate-pop-in {
+    animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  @keyframes popIn {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  .delay-1 {
+    animation-delay: 0.1s;
+  }
+  .delay-2 {
+    animation-delay: 0.2s;
+  }
+  .delay-3 {
+    animation-delay: 0.3s;
+  }
+  .delay-4 {
+    animation-delay: 0.4s;
+  }
+  .delay-5 {
+    animation-delay: 0.5s;
+  }
+  .delay-6 {
+    animation-delay: 0.6s;
+  }
+
+  /* Dark mode specific chart grid lines */
+  [data-theme="dark"] .chart-card .card-body {
+    /* Chart.js will inherit text color, ensure it's visible */
+  }
+  [data-theme="dark"] .revenue-chart-container canvas,
+  [data-theme="dark"] .occupancy-chart-container canvas {
+    /* Chart.js handles its own theme usually or you set colors in JS */
+  }
+  [data-theme="dark"] .list-group-activity .list-group-item {
+    background-color: var(--card-bg); /* Ensure dark mode card bg */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  [data-theme="dark"] .list-group-activity .list-group-item:hover {
+    background-color: var(--sidebar-active-bg);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid">
+  <!-- Statistics Cards Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3 animate-pop-in delay-1">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="stat-icon-wrapper">
+            <i class="bx bx-bed"></i>
+          </div>
+          <div class="stat-value">85%</div>
+          <div class="stat-label">Room Occupancy</div>
+          <div class="progress mt-2">
+            <div
+              class="progress-bar bg-primary"
+              role="progressbar"
+              style="width: 85%"
+              aria-valuenow="85"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted">Target: 90%</small>
+            <span class="badge bg-success-soft text-success rounded-pill">
+              <i class="bx bx-up-arrow-alt me-1"></i>5.2%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 animate-pop-in delay-2">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div
+            class="stat-icon-wrapper"
+            style="
+              background-color: rgba(var(--success-rgb, 45, 147, 108), 0.08);
+              color: var(--success, #2d936c);
+            "
+          >
+            <i class="bx bx-dollar-circle"></i>
+          </div>
+          <div class="stat-value">$24,500</div>
+          <div class="stat-label">Monthly Revenue</div>
+          <div class="progress mt-2">
+            <div
+              class="progress-bar bg-success"
+              role="progressbar"
+              style="width: 70%"
+              aria-valuenow="70"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted">Target: $30,000</small>
+            <span class="badge bg-success-soft text-success rounded-pill">
+              <i class="bx bx-up-arrow-alt me-1"></i>8.1%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 animate-pop-in delay-3">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div
+            class="stat-icon-wrapper"
+            style="
+              background-color: rgba(var(--warning-rgb, 212, 162, 90), 0.08);
+              color: var(--warning, #d4a25a);
+            "
+          >
+            <i class="bx bx-calendar-check"></i>
+          </div>
+          <div class="stat-value">156</div>
+          <div class="stat-label">Active Bookings</div>
+          <div class="progress mt-2">
+            <div
+              class="progress-bar bg-warning"
+              role="progressbar"
+              style="width: 65%"
+              aria-valuenow="65"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted">Capacity: 200</small>
+            <span class="badge bg-danger-soft text-danger rounded-pill">
+              <i class="bx bx-down-arrow-alt me-1"></i>2.5%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 animate-pop-in delay-4">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div
+            class="stat-icon-wrapper"
+            style="
+              background-color: rgba(var(--info-rgb, 92, 135, 182), 0.08);
+              color: var(--info, #5c87b6);
+            "
+          >
+            <i class="bx bx-user-plus"></i>
+          </div>
+          <div class="stat-value">78</div>
+          <div class="stat-label">New Guests This Month</div>
+          <div class="progress mt-2">
+            <div
+              class="progress-bar bg-info"
+              role="progressbar"
+              style="width: 78%"
+              aria-valuenow="78"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted"
+              >Avg. Rating: 4.5 <i class="bx bxs-star text-warning"></i
+            ></small>
+            <span class="badge bg-success-soft text-success rounded-pill">
+              <i class="bx bx-up-arrow-alt me-1"></i>3.8%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-12 col-lg-7 animate-pop-in delay-5">
+      <div class="card chart-card h-100">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h5 class="card-title mb-0">Revenue Overview</h5>
+          <div class="dropdown">
+            <button
+              class="btn btn-sm btn-outline-secondary dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              This Month
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#">This Week</a></li>
+              <li><a class="dropdown-item active" href="#">This Month</a></li>
+              <li><a class="dropdown-item" href="#">Last Month</a></li>
+              <li><a class="dropdown-item" href="#">This Year</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="revenue-chart-container">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5 animate-pop-in delay-6">
+      <div class="card chart-card h-100">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Room Types Occupancy</h5>
+        </div>
+        <div class="card-body">
+          <div class="occupancy-chart-container">
+            <canvas id="occupancyChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity and Room Status Row -->
+  <div class="row g-4">
+    <div class="col-12 col-lg-7 animate-pop-in delay-1">
+      <div class="card chart-card h-100">
+        <!-- Re-using chart-card style for consistency -->
+        <div class="card-header">
+          <h5 class="card-title mb-0">Recent Hotel Activity</h5>
+        </div>
+        <div class="card-body">
+          <div
+            class="list-group list-group-flush list-group-activity"
+            style="max-height: 380px; overflow-y: auto"
+          >
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1 activity-title">New Booking #12345</h6>
+                <small class="activity-time">2 mins ago</small>
+              </div>
+              <p class="mb-1 activity-description">
+                John Doe booked a
+                <span class="fw-semibold text-primary">Deluxe Suite</span> for 3
+                nights.
+              </p>
+              <small class="text-muted">Assigned to: Staff A</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1 activity-title">Guest Check-out</h6>
+                <small class="activity-time">15 mins ago</small>
+              </div>
+              <p class="mb-1 activity-description">
+                Jane Smith from <span class="fw-semibold">Room 302</span> has
+                checked out.
+              </p>
+              <small class="text-muted">Room status: Needs cleaning</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1 activity-title">
+                  New 5-Star Review <i class="bx bxs-star text-warning"></i>
+                </h6>
+                <small class="activity-time">1 hour ago</small>
+              </div>
+              <p class="mb-1 activity-description">
+                "Amazing stay, wonderful staff!" - Michael B.
+              </p>
+              <small class="text-muted">Source: Online Travel Agent</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1 activity-title">Maintenance Request</h6>
+                <small class="activity-time">3 hours ago</small>
+              </div>
+              <p class="mb-1 activity-description">
+                <span class="fw-semibold">Room 105</span>: A/C not working.
+              </p>
+              <small class="text-muted">Priority: High</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1 activity-title">Upcoming VIP Arrival</h6>
+                <small class="activity-time">Tomorrow</small>
+              </div>
+              <p class="mb-1 activity-description">
+                Ms. Eleonora Vance, CEO of TechCorp.
+              </p>
+              <small class="text-muted">Prepare welcome amenities.</small>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5 animate-pop-in delay-2">
+      <div class="card chart-card room-status-card h-100">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Current Room Status</h5>
+        </div>
+        <div class="card-body">
+          <div class="row text-center mb-3 g-3">
+            <div class="col-4 stat-item">
+              <h3 class="mb-1">45</h3>
+              <p class="text-muted mb-0">
+                <i class="bx bx-check-circle text-success me-1"></i>Available
+              </p>
+            </div>
+            <div class="col-4 stat-item">
+              <h3 class="mb-1">32</h3>
+              <p class="text-muted mb-0">
+                <i class="bx bx-user-pin text-primary me-1"></i>Occupied
+              </p>
+            </div>
+            <div class="col-4 stat-item">
+              <h3 class="mb-1">8</h3>
+              <p class="text-muted mb-0">
+                <i class="bx bx-wrench text-warning me-1"></i>Maintenance
+              </p>
+            </div>
+          </div>
+          <div class="progress mb-3" style="height: 10px">
+            <div
+              class="progress-bar bg-success"
+              role="progressbar"
+              style="width: 53%"
+              aria-valuenow="53"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              data-bs-toggle="tooltip"
+              title="53% Available"
+            ></div>
+            <div
+              class="progress-bar bg-primary"
+              role="progressbar"
+              style="width: 37%"
+              aria-valuenow="37"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              data-bs-toggle="tooltip"
+              title="37% Occupied"
+            ></div>
+            <div
+              class="progress-bar bg-warning"
+              role="progressbar"
+              style="width: 10%"
+              aria-valuenow="10"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              data-bs-toggle="tooltip"
+              title="10% Maintenance"
+            ></div>
+          </div>
+          <button class="btn btn-sm btn-outline-primary w-100 mt-2">
+            <i class="bx bx-grid-alt me-1"></i> View Room Management
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const isDarkMode =
+      document.documentElement.getAttribute("data-theme") === "dark";
+    const primaryColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--primary")
+      .trim();
+    const grayColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--gray")
+      .trim();
+    const borderColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--border-color")
+      .trim();
+    const bodyColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--dark")
+      .trim(); // For text
+
+    // Helper to get theme colors
+    const getThemeColor = (variableName) =>
+      getComputedStyle(document.documentElement)
+        .getPropertyValue(variableName)
+        .trim();
+
+    // Revenue Chart
+    const revenueCtx = document.getElementById("revenueChart").getContext("2d");
+    const revenueChart = new Chart(revenueCtx, {
+      type: "line",
+      data: {
+        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
+        datasets: [
+          {
+            label: "Revenue",
+            data: [18500, 19500, 21000, 22500, 23500, 24500, 26000],
+            borderColor: primaryColor,
+            backgroundColor: `rgba(${getComputedStyle(
+              document.documentElement
+            ).getPropertyValue("--primary-rgb")}, 0.15)`, // Use CSS var
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: primaryColor,
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: primaryColor,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isDarkMode ? "#333" : "#fff",
+            titleColor: isDarkMode ? "#fff" : "#333",
+            bodyColor: isDarkMode ? "#eee" : "#555",
+            borderColor: primaryColor,
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 5,
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: false, // Start slightly below min value for better look
+            grid: { color: borderColor, drawBorder: false },
+            ticks: {
+              color: grayColor,
+              padding: 10,
+              callback: function (value) {
+                return "$" + value / 1000 + "k";
+              },
+            },
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: grayColor, padding: 10 },
+          },
+        },
+      },
+    });
+
+    // Occupancy Chart (Room Types)
+    const occupancyCtx = document
+      .getElementById("occupancyChart")
+      .getContext("2d");
+    const occupancyChart = new Chart(occupancyCtx, {
+      type: "doughnut",
+      data: {
+        labels: ["Standard", "Deluxe", "Suite", "Family"],
+        datasets: [
+          {
+            data: [20, 15, 8, 5], // Example data
+            backgroundColor: [
+              primaryColor,
+              getThemeColor("--success"), // Use theme success color
+              getThemeColor("--warning"), // Use theme warning color
+              getThemeColor("--info"), // Use theme info color
+            ],
+            borderColor: isDarkMode ? getThemeColor("--card-bg") : "#fff", // Border matches card bg in dark mode
+            borderWidth: 3, // Creates a nice separation
+            hoverOffset: 8,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              color: bodyColor,
+              padding: 15,
+              usePointStyle: true,
+              pointStyle: "circle",
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                let label = context.label || "";
+                if (label) {
+                  label += ": ";
+                }
+                if (context.parsed !== null) {
+                  label += context.parsed + " rooms";
+                }
+                return label;
+              },
+            },
+          },
+        },
+        cutout: "65%", // Slightly less cutout for a bolder look
+      },
+    });
+
+    // Re-initialize tooltips if any were added dynamically or need specific targeting
+    var tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Theme change listener to update chart colors if needed
+    const themeToggle = document.getElementById("themeToggle"); // Assuming your theme toggle has this ID
+    if (themeToggle) {
+      themeToggle.addEventListener("click", () => {
+        // Small delay to allow theme variables to update
+        setTimeout(() => {
+          const newIsDarkMode =
+            document.documentElement.getAttribute("data-theme") === "dark";
+          const newPrimaryColor = getComputedStyle(document.documentElement)
+            .getPropertyValue("--primary")
+            .trim();
+          const newGrayColor = getComputedStyle(document.documentElement)
+            .getPropertyValue("--gray")
+            .trim();
+          const newBorderColor = getComputedStyle(document.documentElement)
+            .getPropertyValue("--border-color")
+            .trim();
+          const newBodyColor = getComputedStyle(document.documentElement)
+            .getPropertyValue("--dark")
+            .trim();
+          const newCardBg = getComputedStyle(document.documentElement)
+            .getPropertyValue("--card-bg")
+            .trim();
+
+          // Update Revenue Chart
+          revenueChart.data.datasets[0].borderColor = newPrimaryColor;
+          revenueChart.data.datasets[0].backgroundColor = `rgba(${getComputedStyle(
+            document.documentElement
+          ).getPropertyValue("--primary-rgb")}, 0.15)`;
+          revenueChart.data.datasets[0].pointBackgroundColor = newPrimaryColor;
+          revenueChart.options.plugins.tooltip.backgroundColor = newIsDarkMode
+            ? "#333"
+            : "#fff";
+          revenueChart.options.plugins.tooltip.titleColor = newIsDarkMode
+            ? "#fff"
+            : "#333";
+          revenueChart.options.plugins.tooltip.bodyColor = newIsDarkMode
+            ? "#eee"
+            : "#555";
+          revenueChart.options.plugins.tooltip.borderColor = newPrimaryColor;
+          revenueChart.options.scales.y.grid.color = newBorderColor;
+          revenueChart.options.scales.y.ticks.color = newGrayColor;
+          revenueChart.options.scales.x.ticks.color = newGrayColor;
+          revenueChart.update();
+
+          // Update Occupancy Chart
+          occupancyChart.data.datasets[0].backgroundColor = [
+            newPrimaryColor,
+            getComputedStyle(document.documentElement)
+              .getPropertyValue("--success")
+              .trim(),
+            getComputedStyle(document.documentElement)
+              .getPropertyValue("--warning")
+              .trim(),
+            getComputedStyle(document.documentElement)
+              .getPropertyValue("--info")
+              .trim(),
+          ];
+          occupancyChart.data.datasets[0].borderColor = newIsDarkMode
+            ? newCardBg
+            : "#fff";
+          occupancyChart.options.plugins.legend.labels.color = newBodyColor;
+          occupancyChart.update();
+        }, 100);
+      });
+    }
+  });
+</script>
+{% endblock %}

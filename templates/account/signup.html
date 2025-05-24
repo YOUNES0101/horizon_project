@@ -1,0 +1,293 @@
+{% load i18n %}
+{% load account socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HORIZONH - Sign Up</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+    <!-- Font Awesome CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      body {
+        overflow-x: hidden;
+      }
+
+      .main-container {
+        min-height: 100vh;
+      }
+
+      .form-column {
+        background-color: #ffffff;
+      }
+
+      .promo-column {
+        background-image: linear-gradient(
+            rgba(0, 0, 0, 0.5),
+            rgba(0, 0, 0, 0.7)
+          ),
+          url("https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80");
+        background-size: cover;
+        background-position: center;
+        color: #fff;
+        min-height: 350px;
+      }
+
+      .form-inner-container {
+        max-width: 450px;
+        width: 100%;
+      }
+
+      .logo {
+        font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #3366e8;
+        margin-bottom: 1.5rem;
+      }
+      .logo .fa-hotel {
+        margin-right: 0.5rem;
+      }
+
+      .separator {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        color: #6c757d;
+      }
+      .separator::before,
+      .separator::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .separator span {
+        padding: 0 1rem;
+        font-size: 0.9rem;
+      }
+
+      .promo-content h2 {
+        font-size: 2.2rem;
+        font-weight: 600;
+      }
+      @media (min-width: 768px) {
+        .promo-content h2 {
+          font-size: 2.8rem;
+        }
+      }
+
+      .promo-content p.lead {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .promo-badge {
+        background-color: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(4px);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .promo-badge .fas {
+        color: #bbe1fa;
+      }
+
+      .form-control {
+        padding: 0.75rem 1rem;
+      }
+
+      .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+      }
+
+      .errorlist {
+        color: #dc3545;
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid p-0 main-container">
+      <div class="row g-0 w-100 h-100">
+        <!-- Promo Column -->
+        <div
+          class="col-lg-6 d-flex flex-column justify-content-center align-items-center text-center p-4 p-md-5 order-1 order-lg-2 promo-column"
+        >
+          <div class="promo-content">
+            <h2 class="mb-3">Join Our Community</h2>
+            <p class="lead mb-4">
+              Create your account and start your journey with us. Get access to
+              exclusive deals and personalized experiences.
+            </p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+              <span
+                class="badge rounded-pill p-2 px-3 promo-badge mb-2 mb-sm-0"
+              >
+                <i class="fas fa-check-circle me-1"></i> Best Price Guarantee
+              </span>
+              <span class="badge rounded-pill p-2 px-3 promo-badge">
+                <i class="fas fa-concierge-bell me-1"></i> 24/7 Concierge
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Column -->
+        <div
+          class="col-lg-6 d-flex flex-column justify-content-center align-items-center p-4 p-md-5 order-2 order-lg-1 form-column"
+        >
+          <div class="form-inner-container">
+            <div class="logo text-center text-lg-start">
+              <i class="fas fa-hotel"></i> HORIZONH
+            </div>
+            <h1 class="h3 mb-3 fw-semibold text-center text-lg-start">
+              Create your account
+            </h1>
+            <p class="text-muted mb-4 text-center text-lg-start">
+              Join us and unlock exclusive member benefits.
+            </p>
+
+            {% get_providers as socialaccount_providers %} {% if socialaccount_providers %}
+            <a
+              href="{% provider_login_url 'google' process='signup' %}"
+              class="btn btn-outline-secondary w-100 mb-3 d-flex align-items-center justify-content-center"
+            >
+              <i class="fab fa-google me-2"></i> Sign up with Google
+            </a>
+
+            <div class="separator my-4">
+              <span>or</span>
+            </div>
+            {% endif %}
+
+            <form
+              class="signup"
+              id="signup_form"
+              method="post"
+              action="{% url 'account_signup' %}"
+            >
+              {% csrf_token %} {% if form.errors %}
+              <div class="alert alert-danger">
+                {% for field in form %} {% for error in field.errors %}
+                <div class="errorlist">{{ error }}</div>
+                {% endfor %} {% endfor %} {% for error in form.non_field_errors %}
+                <div class="errorlist">{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              <div class="form-floating mb-3">
+                <input
+                  type="email"
+                  name="email"
+                  class="form-control"
+                  id="floatingEmail"
+                  placeholder="name@example.com"
+                  required
+                />
+                <label for="floatingEmail">Email address</label>
+              </div>
+
+              <div class="form-floating mb-3">
+                <input
+                  type="text"
+                  name="username"
+                  class="form-control"
+                  id="floatingUsername"
+                  placeholder="Username"
+                  required
+                />
+                <label for="floatingUsername">Username</label>
+              </div>
+
+              <div class="form-floating mb-3">
+                <input
+                  type="password"
+                  name="password1"
+                  class="form-control"
+                  id="floatingPassword1"
+                  placeholder="Password"
+                  required
+                />
+                <label for="floatingPassword1">Password</label>
+              </div>
+
+              <div class="form-floating mb-3">
+                <input
+                  type="password"
+                  name="password2"
+                  class="form-control"
+                  id="floatingPassword2"
+                  placeholder="Confirm Password"
+                  required
+                />
+                <label for="floatingPassword2">Confirm Password</label>
+              </div>
+
+              {% if redirect_field_value %}
+              <input
+                type="hidden"
+                name="{{ redirect_field_name }}"
+                value="{{ redirect_field_value }}"
+              />
+              {% endif %}
+
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="termsCheck"
+                  required
+                />
+                <label
+                  class="form-check-label text-muted small"
+                  for="termsCheck"
+                >
+                  I agree to the
+                  <a href="#" class="text-decoration-none">Terms of Service</a>
+                  and
+                  <a href="#" class="text-decoration-none">Privacy Policy</a>
+                </label>
+              </div>
+
+              <button
+                class="btn btn-primary w-100 py-2 btn-lg fw-semibold"
+                type="submit"
+              >
+                Create Account
+              </button>
+            </form>
+
+            <p class="mt-4 text-muted text-center small">
+              Already have an account?
+              <a href="{% url 'account_login' %}" class="fw-medium">Sign in</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>

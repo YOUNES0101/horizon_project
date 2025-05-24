@@ -1,0 +1,736 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Booking Confirmed -
+HORIZONH{% endblock %} {% block extra_css %}
+<link
+  href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+  rel="stylesheet"
+/>
+{# Reusing consistent styles from previous improved templates #}
+<style>
+  :root {
+    /* Define colors if not already defined in base.html */
+    --primary: #0d6efd; /* Example primary color */
+    --primary-rgb: 13, 110, 253;
+    --primary-dark: #0a58ca;
+    --secondary: #6c757d;
+    --success: #198754;
+    --success-rgb: 25, 135, 84;
+    --info: #0dcaf0;
+    --info-rgb: 13, 202, 240;
+    --warning: #ffc107;
+    --warning-rgb: 255, 193, 7;
+    --danger: #dc3545;
+    --danger-rgb: 220, 53, 69;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --white: #ffffff;
+    --font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+      "Noto Color Emoji";
+    --border-radius: 0.375rem;
+    --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+
+  body {
+    font-family: var(--font-family-sans-serif);
+    background-color: var(--light);
+    color: var(--dark);
+  }
+
+  .booking-container {
+    max-width: 1140px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
+
+  .booking-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .booking-header h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.75rem;
+  }
+
+  .booking-header p {
+    color: var(--gray);
+    font-size: 1.15rem;
+    margin-bottom: 0;
+  }
+
+  /* Improved Booking Steps (Consistent) */
+  .booking-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4rem;
+    position: relative;
+    padding: 0 1rem;
+  }
+
+  .booking-steps::before {
+    content: "";
+    position: absolute;
+    top: 1.75rem;
+    left: 5%;
+    right: 5%;
+    height: 4px;
+    background-color: var(--gray-light);
+    z-index: 1;
+  }
+
+  .booking-steps-progress {
+    position: absolute;
+    top: 1.75rem;
+    left: 5%;
+    height: 4px;
+    background-color: var(--success);
+    z-index: 2;
+    transition: width 0.4s ease-in-out;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 3;
+    width: 18%;
+  }
+
+  .step-icon-wrapper {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background-color: var(--white);
+    border: 4px solid var(--gray-light);
+    color: var(--gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .step-icon-wrapper i {
+    font-size: 1.5rem;
+  }
+
+  .step.completed .step-icon-wrapper {
+    border-color: var(--success);
+    background-color: var(--success);
+    color: var(--white);
+  }
+
+  .step.active .step-icon-wrapper {
+    border-color: var(--success); /* Confirmation step is also success */
+    background-color: var(--success);
+    color: var(--white);
+  }
+
+  .step-label {
+    font-size: 0.9rem;
+    color: var(--gray);
+    font-weight: 500;
+  }
+
+  .step.active .step-label {
+    color: var(--success); /* Confirmation step label is success */
+    font-weight: 700;
+  }
+
+  .step.completed .step-label {
+    color: var(--success);
+  }
+
+  /* Card Styling (Consistent) */
+  .confirmation-card {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-sm);
+    border: 1px solid var(--gray-light);
+    padding: 2.5rem; /* More padding for confirmation */
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease;
+    overflow: hidden; /* For confetti */
+    position: relative; /* For confetti */
+  }
+
+  .confirmation-card:hover {
+    box-shadow: var(--box-shadow);
+  }
+
+  /* Confirmation Header */
+  .confirmation-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px dashed var(--gray-light);
+  }
+
+  .confirmation-icon {
+    width: 6rem;
+    height: 6rem;
+    background-color: var(--success);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 0 0 10px rgba(var(--success-rgb), 0.1);
+  }
+
+  .confirmation-title {
+    font-size: 2rem; /* Larger title */
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .confirmation-subtitle {
+    color: var(--gray);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .booking-number {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    display: inline-block;
+  }
+  .booking-number strong {
+    color: var(--primary-dark);
+  }
+
+  /* Confirmation Details */
+  .confirmation-details {
+    margin-top: 2rem;
+  }
+
+  .detail-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .detail-section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gray-light);
+    display: flex;
+    align-items: center;
+  }
+  .detail-section-title i {
+    color: var(--primary);
+    font-size: 1.4em;
+    margin-right: 0.75rem;
+  }
+
+  .detail-row {
+    display: flex;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+
+  .detail-label {
+    width: 35%; /* Adjust width */
+    color: var(--gray);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .detail-value {
+    width: 65%; /* Adjust width */
+    color: var(--dark);
+    font-weight: 500;
+  }
+
+  /* Payment Status Badge */
+  .badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.85em;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+  }
+  .badge.bg-success {
+    background-color: var(--success);
+  }
+  .badge.bg-warning {
+    background-color: var(--warning);
+  }
+  .badge.text-dark {
+    color: var(--dark) !important;
+  }
+
+  /* Email Sent Notice */
+  .email-sent-notice {
+    display: flex;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 1rem 1.5rem;
+    background-color: rgba(var(--info-rgb), 0.1);
+    border-radius: var(--border-radius);
+    color: var(--info);
+    border: 1px solid rgba(var(--info-rgb), 0.2);
+  }
+
+  .email-sent-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+
+  .email-sent-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  .email-sent-text strong {
+    color: var(--primary-dark);
+  }
+
+  /* Confirmation Actions (Consistent Buttons) */
+  .confirmation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--gray-light);
+    justify-content: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+  }
+
+  .btn i {
+    margin-right: 0.5rem;
+    font-size: 1.2em;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--white);
+    border: 1px solid var(--primary);
+  }
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.25);
+  }
+
+  .btn-outline-primary {
+    background-color: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+  .btn-outline-primary:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    background-color: transparent;
+    color: var(--gray);
+    border: 1px solid var(--gray-light);
+  }
+  .btn-outline-secondary:hover {
+    background-color: var(--gray-light);
+    color: var(--dark);
+    border-color: var(--gray);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .booking-header h1 {
+      font-size: 2.2rem;
+    }
+    .booking-steps {
+      margin-bottom: 3rem;
+    }
+    .step-label {
+      font-size: 0.8rem;
+    }
+    .confirmation-card {
+      padding: 1.5rem;
+    }
+    .confirmation-icon {
+      width: 4rem;
+      height: 4rem;
+      font-size: 2rem;
+    }
+    .confirmation-title {
+      font-size: 1.6rem;
+    }
+    .detail-row {
+      flex-direction: column;
+      margin-bottom: 1.2rem;
+    }
+    .detail-label,
+    .detail-value {
+      width: 100%;
+    }
+    .detail-label {
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    .detail-value {
+      font-weight: 400;
+    }
+    .confirmation-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .btn {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .booking-container {
+      margin-top: 1rem;
+    }
+    .detail-section-title {
+      font-size: 1.1rem;
+    }
+  }
+
+  /* Confetti Styles */
+  .confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: var(--primary);
+    opacity: 0.7;
+    z-index: 1000;
+    pointer-events: none;
+    border-radius: 2px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container booking-container py-4">
+  <!-- Booking Header -->
+  <div class="booking-header">
+    <h1>Booking Confirmation</h1>
+    <p>Your stay at HORIZONH is confirmed!</p>
+  </div>
+
+  <!-- Booking Steps -->
+  <div class="booking-steps" id="bookingSteps">
+    <!-- Progress Bar -->
+    {# Step 5 of 5: Progress = 100% #}
+    <div
+      class="booking-steps-progress"
+      id="progressBar"
+      style="width: 100%"
+    ></div>
+    <!-- Steps -->
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class="bx bx-bed"></i></div>
+      <div class="step-label">Select Room</div>
+    </div>
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class="bx bx-calendar-check"></i></div>
+      <div class="step-label">Choose Dates</div>
+    </div>
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class="bx bx-user"></i></div>
+      <div class="step-label">Guest Details</div>
+    </div>
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class="bx bx-credit-card"></i></div>
+      <div class="step-label">Payment</div>
+    </div>
+    <div class="step active">
+      {# Mark as active and completed visually #}
+      <div class="step-icon-wrapper"><i class="bx bx-check-double"></i></div>
+      <div class="step-label">Confirmation</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-10 mx-auto">
+      <!-- Confirmation Card -->
+      <div class="confirmation-card" id="confirmationCard">
+        <div class="confirmation-header">
+          <div class="confirmation-icon">
+            <i class="bx bx-check"></i>
+          </div>
+          <h2 class="confirmation-title">Booking Confirmed!</h2>
+          <p class="confirmation-subtitle">
+            Thank you, {{ booking.guest_name }}, for choosing HORIZONH.
+          </p>
+          <div class="booking-number">
+            Booking Reference: <strong>{{ booking.booking_number }}</strong>
+          </div>
+        </div>
+
+        <div class="confirmation-details">
+          <div class="detail-section">
+            <h3 class="detail-section-title">
+              <i class="bx bx-calendar-event"></i> Booking Details
+            </h3>
+            <div class="detail-row">
+              <div class="detail-label">Check-in Date:</div>
+              <div class="detail-value">
+                {{ booking.check_in_date|date:"l, F d, Y" }} (from 3:00 PM)
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Check-out Date:</div>
+              <div class="detail-value">
+                {{ booking.check_out_date|date:"l, F d, Y" }} (by 11:00 AM)
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Duration:</div>
+              <div class="detail-value">
+                {{ booking.duration }} night{{ booking.duration|pluralize }}
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Number of Guests:</div>
+              <div class="detail-value">
+                {{ booking.num_guests }} guest{{ booking.num_guests|pluralize }}
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h3 class="detail-section-title">
+              <i class="bx bx-bed"></i> Room Information
+            </h3>
+            <div class="detail-row">
+              <div class="detail-label">Room Number:</div>
+              <div class="detail-value">{{ booking.room.number }}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Room Type:</div>
+              <div class="detail-value">
+                {{ booking.room.get_room_type_display }}
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Floor:</div>
+              <div class="detail-value">{{ booking.room.floor }}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Amenities:</div>
+              <div class="detail-value">
+                {% for amenity in booking.room.get_amenity_display %} {{ amenity }}{% if not forloop.last %}, {% endif %} {% empty %} Standard amenities included. {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h3 class="detail-section-title">
+              <i class="bx bx-user-detail"></i> Guest Information
+            </h3>
+            <div class="detail-row">
+              <div class="detail-label">Guest Name:</div>
+              <div class="detail-value">{{ booking.guest_name }}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Email:</div>
+              <div class="detail-value">{{ booking.guest_email }}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Phone:</div>
+              <div class="detail-value">{{ booking.guest_phone }}</div>
+            </div>
+            {% if booking.special_requests %}
+            <div class="detail-row">
+              <div class="detail-label">Special Requests:</div>
+              <div class="detail-value">{{ booking.special_requests }}</div>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="detail-section">
+            <h3 class="detail-section-title">
+              <i class="bx bx-wallet"></i> Payment Summary
+            </h3>
+            <div class="detail-row">
+              <div class="detail-label">Payment Method:</div>
+              <div class="detail-value">
+                {% if booking.payment_method == 'credit_card' %}
+                <i class="bx bx-credit-card align-middle me-1"></i> Credit Card
+                {% elif booking.payment_method == 'paypal' %}
+                <i class="bx bxl-paypal align-middle me-1"></i> PayPal {% elif
+                booking.payment_method == 'bank_transfer' %}
+                <i class="bx bx-bank align-middle me-1"></i> Bank Transfer {%
+                else %} {{ booking.payment_method|title }} {% endif %}
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Payment Status:</div>
+              <div class="detail-value">
+                {% if booking.payment_status %}
+                <span class="badge bg-success"
+                  ><i class="bx bx-check-circle align-middle me-1"></i
+                  >Paid</span
+                >
+                {% else %}
+                <span class="badge bg-warning text-dark"
+                  ><i class="bx bx-time-five align-middle me-1"></i
+                  >Pending</span
+                >
+                {% endif %}
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Total Amount Paid:</div>
+              {# Or Total Amount Due if pending #}
+              <div
+                class="detail-value"
+                style="font-weight: 700; color: var(--primary)"
+              >
+                ${{ booking.total_price|floatformat:2 }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-sent-notice">
+          <div class="email-sent-icon"><i class="bx bx-envelope"></i></div>
+          <div class="email-sent-text">
+            A detailed confirmation email has been sent to
+            <strong>{{ booking.guest_email }}</strong>. Please check your inbox
+            (and spam folder).
+          </div>
+        </div>
+
+        <div class="confirmation-actions">
+          {# Ensure booking.id is passed correctly #}
+            <a href="{% url 'bookings:booking_pdf' booking.id %}" class="btn btn-outline-primary" target="_blank">
+            <i class="bx bx-download"></i> Download PDF
+          </a>
+          <a href="" class="btn btn-primary">
+            <i class="bx bx-list-ul"></i> View My Bookings
+          </a>
+          <a
+            href="{% url 'rooms:rooms_and_suites' %}"
+            class="btn btn-outline-secondary"
+          >
+            <i class="bx bx-home"></i> Back to Homepage
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // --- Confetti Animation ---
+    function createConfettiPiece(container) {
+      const confetti = document.createElement("div");
+      confetti.classList.add("confetti");
+      const colors = [
+        "#0d6efd",
+        "#198754",
+        "#ffc107",
+        "#dc3545",
+        "#0dcaf0",
+        "#6f42c1",
+      ];
+      confetti.style.backgroundColor =
+        colors[Math.floor(Math.random() * colors.length)];
+
+      const size = Math.random() * 8 + 4; // Size between 4px and 12px
+      confetti.style.width = size + "px";
+      confetti.style.height = size * (Math.random() * 0.5 + 0.5) + "px"; // Rectangular shape
+
+      confetti.style.top = "-15px";
+      confetti.style.left = Math.random() * container.offsetWidth + "px";
+
+      container.appendChild(confetti);
+      return confetti;
+    }
+
+    function animateConfetti(confetti, container) {
+      const duration = Math.random() * 3000 + 2000; // 2-5 seconds
+      const delay = Math.random() * 500; // Stagger start times
+      const endY = container.offsetHeight + 20;
+      const endX = Math.random() * container.offsetWidth;
+      const rotation = Math.random() * 720 - 360; // Rotate randomly
+
+      confetti.animate(
+        [
+          { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+          {
+            transform: `translate(${
+              endX - parseFloat(confetti.style.left)
+            }px, ${endY}px) rotate(${rotation}deg)`,
+            opacity: 0,
+          },
+        ],
+        {
+          duration: duration,
+          delay: delay,
+          easing: "ease-out",
+          fill: "forwards",
+        }
+      );
+
+      // Remove confetti element after animation + buffer
+      setTimeout(() => {
+        confetti.remove();
+      }, duration + delay + 100);
+    }
+
+    function startConfettiShower() {
+      const confirmationCard = document.getElementById("confirmationCard");
+      if (!confirmationCard) return;
+
+      const numConfetti = 150;
+      for (let i = 0; i < numConfetti; i++) {
+        const piece = createConfettiPiece(confirmationCard);
+        animateConfetti(piece, confirmationCard);
+      }
+    }
+
+    // Start confetti shortly after page load
+    setTimeout(startConfettiShower, 300);
+
+    // Update progress bar based on current step (Step 5 of 5)
+    const progressBar = document.getElementById("progressBar");
+    if (progressBar) {
+      progressBar.style.width = `100%`;
+    }
+  });
+</script>
+{% endblock %}

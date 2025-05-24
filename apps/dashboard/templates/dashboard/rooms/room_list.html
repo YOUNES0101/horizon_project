@@ -1,0 +1,1259 @@
+{% extends 'dashboard/base.html' %} {% load static %}
+{% load template_filter %}
+{% block title %}Room Management - HORIZONH{% endblock %}
+{% block header_title %}Room Management{% endblock %} {% block extra_css %}
+<style>
+  /* Room List Specific Styles */
+  .room-card {
+    border: none;
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .room-card .card-img-top {
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .room-card:hover .card-img-top {
+    transform: scale(1.05);
+  }
+
+  .room-number {
+    position: absolute;
+    top: 15px;
+    left: 5px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    z-index: 2;
+  }
+
+  .room-type-badge {
+    position: absolute;
+    top: 15px;
+    right: 5px;
+    z-index: 2;
+  }
+
+  .room-floor {
+    display: inline-flex;
+    align-items: center;
+    color: var(--gray);
+    font-size: 0.875rem;
+    margin-right: 1rem;
+  }
+
+  .room-amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .amenity-icon {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(var(--primary-rgb), 0.08);
+    border-radius: 50%;
+    color: var(--primary);
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+
+  .amenity-icon:hover {
+    transform: scale(1.1);
+    background-color: rgba(var(--primary-rgb), 0.15);
+  }
+
+  .room-actions {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .room-card:hover .room-actions {
+    opacity: 1;
+  }
+
+  .action-icon {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 50%;
+    color: var(--gray-dark);
+    margin-left: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .action-icon:hover {
+    transform: scale(1.1);
+  }
+
+  .action-icon.edit:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .action-icon.delete:hover {
+    background-color: var(--danger);
+    color: white;
+  }
+
+  /* Filter and Sort Section */
+  .filter-card {
+    border: none;
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    max-height: 100px;
+  }
+
+  .filter-card2 {
+    border: none;
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    background-color: white;
+  }
+
+  .filter-card:hover {
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .filter-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+  }
+
+  .filter-body {
+    padding: 1.5rem;
+  }
+
+  .filter-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .filter-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .filter-reset {
+    font-size: 0.8rem;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .filter-reset:hover {
+    text-decoration: underline;
+  }
+
+  .form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  /* List View Styles */
+  .list-view .room-card {
+    display: flex;
+    flex-direction: row;
+    height: auto;
+  }
+
+  .list-view .room-card .card-img-container {
+    width: 200px;
+    height: auto;
+    overflow: hidden;
+  }
+
+  .list-view .room-card .card-img-top {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .list-view .room-card .card-body {
+    flex: 1;
+  }
+
+  /* Batch Actions */
+  .batch-actions {
+    display: none;
+    margin-bottom: 1rem;
+  }
+
+  .batch-actions.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Room Selection */
+  .room-select {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 3;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .selection-mode .room-select {
+    opacity: 1;
+  }
+
+  .selection-mode .room-number {
+    left: 45px;
+  }
+
+  /* Availability Toggle */
+  .availability-toggle {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+  }
+
+  .availability-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 24px;
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .toggle-slider {
+    background-color: var(--success);
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+  }
+
+  /* Animation Classes */
+  .animate-pop-in {
+    animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  @keyframes popIn {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .delay-1 {
+    animation-delay: 0.1s;
+  }
+  .delay-2 {
+    animation-delay: 0.2s;
+  }
+  .delay-3 {
+    animation-delay: 0.3s;
+  }
+  .delay-4 {
+    animation-delay: 0.4s;
+  }
+  .delay-5 {
+    animation-delay: 0.5s;
+  }
+  .delay-6 {
+    animation-delay: 0.6s;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid">
+  <!-- Page Header with Actions -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+      <h1 class="h3 mb-0 text-gray-800 font-weight-bold animate-pop-in">
+        Room Management
+      </h1>
+      <p class="mb-0 text-muted animate-pop-in delay-1">
+        Manage all hotel rooms and their details
+      </p>
+    </div>
+    <div class="col-md-6 text-md-end animate-pop-in delay-2">
+      <button id="toggleSelectionBtn" class="btn btn-outline-secondary me-2">
+        <i class="bx bx-select-multiple me-1"></i> Select Rooms
+      </button>
+      <a href="{% url 'dashboard:room_add' %}" class="btn btn-primary">
+        <i class="bx bx-plus-circle me-1"></i> Add New Room
+      </a>
+    </div>
+  </div>
+
+  <!-- Batch Actions (Hidden by default) -->
+  <div id="batchActions" class="batch-actions mb-4">
+    <div class="card shadow-sm">
+      <div class="card-body d-flex align-items-center">
+        <span class="me-3"
+          ><span id="selectedCount">0</span> rooms selected</span
+        >
+        <button
+          class="btn btn-sm btn-outline-primary me-2"
+          id="markAvailableBtn"
+        >
+          <i class="bx bx-check-circle me-1"></i> Mark Available
+        </button>
+        <button
+          class="btn btn-sm btn-outline-warning me-2"
+          id="markUnavailableBtn"
+        >
+          <i class="bx bx-x-circle me-1"></i> Mark Unavailable
+        </button>
+        <button
+          class="btn btn-sm btn-outline-danger me-2"
+          id="deleteSelectedBtn"
+        >
+          <i class="bx bx-trash me-1"></i> Delete Selected
+        </button>
+        <button
+          class="btn btn-sm btn-outline-secondary ms-auto"
+          id="cancelSelectionBtn"
+        >
+          <i class="bx bx-x me-1"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3 mb-4">
+      <div class="filter-card2 animate-pop-in delay-3">
+        <div class="filter-header">
+          <i class="bx bx-filter-alt me-2"></i> Filter Rooms
+        </div>
+        <div class="filter-body">
+          <!-- Room Type Filter -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <span>Room Type</span>
+              <span class="filter-reset" data-filter="room_type">Reset</span>
+            </div>
+            <div class="mb-3">
+              {% for type_key, type_name in room_types.items %}
+              <div class="form-check mb-2">
+                <input class="form-check-input"type="checkbox" value="{{ type_key }}" id="type_{{ type_key }}" name="room_type"/>
+                <label class="form-check-label" for="type_{{ type_key }}">
+                  {{ type_name }}
+                  <span class="badge bg-light text-dark ms-1">
+                    {% with type_count=room_type_counts|get_item:type_key %} {{ type_count|default:"0" }} {% endwith %}
+                  </span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Floor Filter -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <span>Floor</span>
+              <span class="filter-reset" data-filter="floor">Reset</span>
+            </div>
+            <div class="mb-3">
+              {% for floor in floor_list %}
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="{{ floor }}"
+                  id="floor_{{ floor }}"
+                  name="floor"
+                />
+                <label class="form-check-label" for="floor_{{ floor }}">
+                  Floor {{ floor }}
+                  <span class="badge bg-light text-dark ms-1">
+                    {% with floor_count=floor_counts|get_item:floor %} {{floor_count|default:"0" }} {% endwith %}
+                  </span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Amenities Filter -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <span>Amenities</span>
+              <span class="filter-reset" data-filter="amenities">Reset</span>
+            </div>
+            <div class="mb-3">
+              {% for amenity_key, amenity_name in all_amenities_choices.items %}
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="{{ amenity_key }}"
+                  id="amenity_{{ amenity_key }}"
+                  name="amenities"
+                />
+                <label class="form-check-label" for="amenity_{{ amenity_key }}">
+                  <i class="{{ amenity_icons|get_item:amenity_key }} me-1"></i>
+                  {{ amenity_name }}
+                  <span class="badge bg-light text-dark ms-1">
+                    {% with amenity_count=amenity_counts|get_item:amenity_key %}
+                    {{ amenity_count|default:"0" }} {% endwith %}
+                  </span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Availability Filter -->
+          <div class="filter-section">
+            <div class="filter-title">
+              <span>Availability</span>
+              <span class="filter-reset" data-filter="availability">Reset</span>
+            </div>
+            <div class="mb-3">
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="availability"
+                  id="available_all"
+                  value="all"
+                  checked
+                />
+                <label class="form-check-label" for="available_all">
+                  All Rooms
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="availability"
+                  id="available_yes"
+                  value="true"
+                />
+                <label class="form-check-label" for="available_yes">
+                  Available Only
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="availability"
+                  id="available_no"
+                  value="false"
+                />
+                <label class="form-check-label" for="available_no">
+                  Unavailable Only
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button id="applyFiltersBtn" class="btn btn-primary w-100">
+            <i class="bx bx-filter me-1"></i> Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Listings -->
+    <div class="col-lg-9">
+      <!-- Results Header -->
+      <div class="card filter-card animate-pop-in delay-4">
+        <div
+          class="card-body d-flex justify-content-between align-items-center py-2"
+        >
+          <div>
+            <h5 class="mb-0">{{ rooms.count }} Rooms Found</h5>
+            <p class="text-muted small mb-0">Showing all available rooms</p>
+          </div>
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <label for="sortOptions" class="form-label visually-hidden">Sort by</label>
+              <select class="form-select form-select-sm" id="sortOptions">
+                <option selected value="number">Sort by: Room Number</option>
+                <option value="room_type">Room Type</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="floor_asc">Floor: Low to High</option>
+                <option value="floor_desc">Floor: High to Low</option>
+                <option value="created_at">Newest First</option>
+              </select>
+            </div>
+            <div class="btn-group" role="group" aria-label="View toggle">
+              <button
+                type="button"
+                class="btn btn-outline-secondary active"
+                id="gridViewBtn"
+              >
+                <i class="bx bx-grid-alt"></i>
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                id="listViewBtn">
+                <i class="bx bx-list-ul"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room Grid View -->
+      <div class="room-grid-view">
+        <div class="row mt-1 g-4" id="roomsContainer">
+          {% for room in rooms %}
+          <div
+            class="col-md-6 col-xl-4 animate-pop-in delay-{{ forloop.counter|add:4|divisibleby:6|add:1 }}"
+          >
+            <div class="card room-card">
+              <div class="position-relative">
+                <div class="room-select">
+                  <input
+                    type="checkbox"
+                    class="form-check-input room-checkbox"
+                    data-room-id="{{ room.id }}"
+                  />
+                </div>
+                <div class="room-number">Room {{ room.number }}</div>
+                <div class="room-type-badge">
+                  <span class="badge bg-primary">{{ room.get_room_type_display }}</span
+                  >
+                </div>
+                <img
+                  src="{{ room.get_image_url }}"
+                  class="card-img-top"
+                  alt="{{ room.get_room_type_display }}"
+                />
+                <div class="room-actions">
+                  <a
+                    href="{% url 'dashboard:room_edit' room.id %}"
+                    class="action-icon edit"
+                  >
+                    <i class="bx bx-edit"></i>
+                  </a>
+                  <a
+                    href="{% url 'dashboard:room_delete' room.id %}"
+                    class="action-icon delete"
+                  >
+                    <i class="bx bx-trash"></i>
+                  </a>
+                </div>
+              </div>
+              <div class="card-body">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-2" >
+                  <h5 class="card-title mb-0">
+                    {{ room.get_room_type_display }}
+                  </h5>
+                  <h5 class="card-title mb-0" style="right: 30px; top: 20px; font-size: 20px; font-family: 'Poppins', sans-serif;">${{ room.price }}</h5>
+                  <!-- <div class="availability-toggle">
+                    <input type="checkbox" {%if room.is_available%}checked{%endif%} data-room-id="{{ room.id }}"class="availability-checkbox"/>
+                    <span class="toggle-slider"></span>
+                  </div> -->
+                </div>
+                <div class="room-floor mb-2">
+                  <i class="bx bx-building-house me-1"></i> Floor {{ room.floor }}
+                </div>
+                <div class="room-amenities">
+                  {% for amenity in room.amenities|slice:":5" %}
+                  <div
+                    class="amenity-icon"
+                    title="{{ amenity_icons|get_item:amenity }}"
+                  >
+                    <i class="{{ amenity_icons|get_item:amenity }}"></i>
+                  </div>
+                  {% endfor %} {% if room.amenities|length > 5 %}
+                  <div class="amenity-icon" title="More amenities">+{{ room.amenities|length|add:"-5" }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-12">
+            <div class="alert alert-info">
+              <i class="bx bx-info-circle me-2"></i> No rooms found matching
+              your criteria. Please try adjusting your filters.
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Room List View (hidden by default) -->
+      <div class="room-list-view mt-3 d-none">
+        {% for room in rooms %}
+        <div
+          class="card room-card mb-3 animate-pop-in delay-{{ forloop.counter|add:4|divisibleby:6|add:1 }}"
+        >
+          <div class="row g-0">
+            <div class="col-md-3 position-relative">
+              <div class="room-select">
+                <input
+                  type="checkbox"
+                  class="form-check-input room-checkbox"
+                  data-room-id="{{ room.id }}"
+                />
+              </div>
+              <div class="room-number">Room {{ room.number }}</div>
+              <div class="room-type-badge">
+                <span class="badge bg-primary">{{ room.get_room_type_display }}</span>
+
+              </div>
+              <div class="card-img-container h-100 ">
+                <img
+                  src="{{ room.get_image_url }}"
+                  class="card-img-top h-100 w-100"
+                  alt="{{ room.get_room_type_display }}"
+                />
+              </div>
+            </div>
+            <div class="col-md-9">
+              <div class="card-body position-relative">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h5 class="card-title">{{ room.get_room_type_display }}</h5>
+
+                    <h5 style="position: absolute; right: 30px; top: 20px; font-size: 20px; font-family: 'Poppins', sans-serif;" class="card-title ">${{ room.price }}</h5>
+
+                    <div class="room-floor mb-2">
+                      <i class="bx bx-building-house me-1"></i> Floor {{ room.floor }}
+                    </div>
+                  </div>
+                  </div>
+
+
+                <div class="room-amenities mb-3">
+                  {% for amenity in room.amenities %}
+                  <span class="badge bg-light text-dark me-1 mb-1">
+                    <i class="{{ amenity_icons|get_item:amenity }} me-1"></i>
+                    {{ all_amenities_choices|get_item:amenity }}
+                  </span>
+                  {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-end mt-3">
+                  <a
+                    href="{% url 'dashboard:room_edit' room.id %}"
+                    class="btn btn-sm btn-outline-primary me-2"
+                  >
+                    <i class="bx bx-edit me-1"></i> Edit
+                  </a>
+                  <a
+                    href="{% url 'dashboard:room_delete' room.id %}"
+                    class="btn btn-sm btn-outline-danger"
+                  >
+                    <i class="bx bx-trash me-1"></i> Delete
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+          <i class="bx bx-info-circle me-2"></i> No rooms found matching your criteria. Please try adjusting your filters.
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if rooms.count > 0 and rooms.paginator.num_pages > 1 %}
+      <nav aria-label="Page navigation" class="mt-4 animate-pop-in delay-6">
+        <ul class="pagination justify-content-center">
+          {% if rooms.has_previous %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="?page={{ rooms.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+              aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% endif %} {% for i in rooms.paginator.page_range %} {% if rooms.number == i %}
+          <li class="page-item active">
+            <a class="page-link" href="#">{{ i }}</a>
+          </li>
+          {% else %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+              >{{ i }}</a
+            >
+          </li>
+          {% endif %} {% endfor %} {% if rooms.has_next %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="?page={{ rooms.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+              aria-label="Next"
+            >
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div
+  class="modal fade"
+  id="deleteModal"
+  tabindex="-1"
+  aria-labelledby="deleteModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteModalText">
+          Are you sure you want to delete the selected rooms? This action cannot
+          be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Toggle between grid and list view
+    const gridViewBtn = document.getElementById("gridViewBtn");
+    const listViewBtn = document.getElementById("listViewBtn");
+    const gridView = document.querySelector(".room-grid-view");
+    const listView = document.querySelector(".room-list-view");
+
+    gridViewBtn.addEventListener("click", function () {
+      gridViewBtn.classList.add("active");
+      listViewBtn.classList.remove("active");
+      gridView.classList.remove("d-none");
+      listView.classList.add("d-none");
+      localStorage.setItem("roomViewPreference", "grid");
+    });
+
+    listViewBtn.addEventListener("click", function () {
+      listViewBtn.classList.add("active");
+      gridViewBtn.classList.remove("active");
+      listView.classList.remove("d-none");
+      gridView.classList.add("d-none");
+      localStorage.setItem("roomViewPreference", "list");
+    });
+
+    // Check for saved view preference
+    const savedView = localStorage.getItem("roomViewPreference");
+    if (savedView === "list") {
+      listViewBtn.click();
+    }
+
+    // Room selection mode
+    const toggleSelectionBtn = document.getElementById("toggleSelectionBtn");
+    const cancelSelectionBtn = document.getElementById("cancelSelectionBtn");
+    const batchActions = document.getElementById("batchActions");
+    const roomsContainer = document.getElementById("roomsContainer");
+    const selectedCount = document.getElementById("selectedCount");
+
+    toggleSelectionBtn.addEventListener("click", function () {
+      document.body.classList.add("selection-mode");
+      batchActions.classList.add("active");
+      toggleSelectionBtn.classList.add("d-none");
+    });
+
+    cancelSelectionBtn.addEventListener("click", function () {
+      document.body.classList.remove("selection-mode");
+      batchActions.classList.remove("active");
+      toggleSelectionBtn.classList.remove("d-none");
+
+      // Uncheck all checkboxes
+      document.querySelectorAll(".room-checkbox").forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+
+      updateSelectedCount();
+    });
+
+    // Update selected count
+    function updateSelectedCount() {
+      const checkedBoxes = document.querySelectorAll(".room-checkbox:checked");
+      selectedCount.textContent = checkedBoxes.length;
+
+      // Enable/disable batch action buttons based on selection
+      const batchButtons = document.querySelectorAll(
+        "#batchActions button:not(#cancelSelectionBtn)"
+      );
+      batchButtons.forEach((button) => {
+        button.disabled = checkedBoxes.length === 0;
+      });
+    }
+
+    // Listen for checkbox changes
+    document.addEventListener("change", function (e) {
+      if (e.target.classList.contains("room-checkbox")) {
+        updateSelectedCount();
+      }
+    });
+
+    // Batch delete button
+    const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
+    const deleteModal = new bootstrap.Modal(
+      document.getElementById("deleteModal")
+    );
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+    const deleteModalText = document.getElementById("deleteModalText");
+
+    deleteSelectedBtn.addEventListener("click", function () {
+      const checkedBoxes = document.querySelectorAll(".room-checkbox:checked");
+      const roomIds = Array.from(checkedBoxes).map(
+        (checkbox) => checkbox.dataset.roomId
+      );
+
+      if (roomIds.length === 0) return;
+
+      deleteModalText.textContent = `Are you sure you want to delete ${roomIds.length} selected room(s)? This action cannot be undone.`;
+      deleteModal.show();
+
+      // Store selected room IDs for the confirm button
+      confirmDeleteBtn.dataset.roomIds = JSON.stringify(roomIds);
+    });
+
+    // Confirm delete button
+    confirmDeleteBtn.addEventListener("click", function () {
+      const roomIds = JSON.parse(this.dataset.roomIds || "[]");
+
+      if (roomIds.length === 0) {
+        deleteModal.hide();
+        return;
+      }
+
+      // In a real implementation, you would send an AJAX request to delete the rooms
+      console.log("Deleting rooms:", roomIds);
+
+      // Simulate deletion (in a real app, you'd make an AJAX call)
+      fetch("/dashboard/rooms/batch-delete/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ room_ids: roomIds }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // Remove deleted rooms from the DOM
+            roomIds.forEach((id) => {
+              const roomElements = document.querySelectorAll(
+                `.room-card:has(.room-checkbox[data-room-id="${id}"])`
+              );
+              roomElements.forEach((el) => el.remove());
+            });
+
+            // Show success message
+            showToast(
+              "Success",
+              `${roomIds.length} room(s) deleted successfully.`,
+              "success"
+            );
+          } else {
+            showToast(
+              "Error",
+              data.message || "Failed to delete rooms.",
+              "danger"
+            );
+          }
+
+          // Reset selection mode
+          cancelSelectionBtn.click();
+          deleteModal.hide();
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          showToast(
+            "Error",
+            "An error occurred while deleting rooms.",
+            "danger"
+          );
+          deleteModal.hide();
+        });
+    });
+
+    // Batch availability buttons
+    const markAvailableBtn = document.getElementById("markAvailableBtn");
+    const markUnavailableBtn = document.getElementById("markUnavailableBtn");
+
+    markAvailableBtn.addEventListener("click", function () {
+      updateAvailability(true);
+    });
+
+    markUnavailableBtn.addEventListener("click", function () {
+      updateAvailability(false);
+    });
+
+    function updateAvailability(isAvailable) {
+      const checkedBoxes = document.querySelectorAll(".room-checkbox:checked");
+      const roomIds = Array.from(checkedBoxes).map(
+        (checkbox) => checkbox.dataset.roomId
+      );
+
+      if (roomIds.length === 0) return;
+
+      // In a real implementation, you would send an AJAX request to update availability
+      console.log(
+        `Setting ${roomIds.length} rooms to ${
+          isAvailable ? "available" : "unavailable"
+        }`
+      );
+
+      // Simulate update (in a real app, you'd make an AJAX call)
+      fetch("/dashboard/rooms/batch-update-availability/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ room_ids: roomIds, is_available: isAvailable }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // Update availability toggles in the UI
+            roomIds.forEach((id) => {
+              const availabilityToggles = document.querySelectorAll(
+                `.availability-checkbox[data-room-id="${id}"]`
+              );
+              availabilityToggles.forEach((toggle) => {
+                toggle.checked = isAvailable;
+              });
+            });
+
+            // Show success message
+            showToast(
+              "Success",
+              `${roomIds.length} room(s) marked as ${
+                isAvailable ? "available" : "unavailable"
+              }.`,
+              "success"
+            );
+          } else {
+            showToast(
+              "Error",
+              data.message || "Failed to update room availability.",
+              "danger"
+            );
+          }
+
+          // Reset selection mode
+          cancelSelectionBtn.click();
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          showToast(
+            "Error",
+            "An error occurred while updating availability.",
+            "danger"
+          );
+        });
+    }
+
+    // Individual availability toggle
+    document.addEventListener("change", function (e) {
+      if (e.target.classList.contains("availability-checkbox")) {
+        const roomId = e.target.dataset.roomId;
+        const isAvailable = e.target.checked;
+
+        // In a real implementation, you would send an AJAX request to update availability
+        console.log(
+          `Setting room ${roomId} to ${
+            isAvailable ? "available" : "unavailable"
+          }`
+        );
+
+        // Simulate update (in a real app, you'd make an AJAX call)
+        fetch(`/dashboard/rooms/${roomId}/update-availability/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({ is_available: isAvailable }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // Update all toggles for this room
+              const availabilityToggles = document.querySelectorAll(
+                `.availability-checkbox[data-room-id="${roomId}"]`
+              );
+              availabilityToggles.forEach((toggle) => {
+                toggle.checked = isAvailable;
+              });
+
+              showToast(
+                "Success",
+                `Room ${data.room_number} marked as ${
+                  isAvailable ? "available" : "unavailable"
+                }.`,
+                "success"
+              );
+            } else {
+              // Revert the toggle if the update failed
+              e.target.checked = !isAvailable;
+              showToast(
+                "Error",
+                data.message || "Failed to update room availability.",
+                "danger"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            // Revert the toggle if there was an error
+            e.target.checked = !isAvailable;
+            showToast(
+              "Error",
+              "An error occurred while updating availability.",
+              "danger"
+            );
+          });
+      }
+    });
+
+    // Filter reset buttons
+    document.querySelectorAll(".filter-reset").forEach((button) => {
+      button.addEventListener("click", function () {
+        const filterType = this.dataset.filter;
+
+        // Reset checkboxes for this filter type
+        document
+          .querySelectorAll(`input[name="${filterType}"]`)
+          .forEach((input) => {
+            if (input.type === "checkbox") {
+              input.checked = false;
+            } else if (input.type === "radio" && input.value === "all") {
+              input.checked = true;
+            }
+          });
+      });
+    });
+
+    // Apply filters button
+    const applyFiltersBtn = document.getElementById("applyFiltersBtn");
+
+    applyFiltersBtn.addEventListener("click", function () {
+      // Build filter query
+      const params = new URLSearchParams();
+
+      // Room types
+      const roomTypes = Array.from(
+        document.querySelectorAll('input[name="room_type"]:checked')
+      ).map((input) => input.value);
+      roomTypes.forEach((type) => params.append("room_type", type));
+
+      // Floors
+      const floors = Array.from(
+        document.querySelectorAll('input[name="floor"]:checked')
+      ).map((input) => input.value);
+      floors.forEach((floor) => params.append("floor", floor));
+
+      // Amenities
+      const amenities = Array.from(
+        document.querySelectorAll('input[name="amenities"]:checked')
+      ).map((input) => input.value);
+      amenities.forEach((amenity) => params.append("amenities", amenity));
+
+      // Availability
+      const availability = document.querySelector(
+        'input[name="availability"]:checked'
+      ).value;
+      if (availability !== "all") {
+        params.append("is_available", availability);
+      }
+
+      // Sort option
+      const sortOption = document.getElementById("sortOptions").value;
+      params.append("sort", sortOption);
+
+      // Redirect with filters
+      window.location.href = `?${params.toString()}`;
+    });
+
+    // Sort dropdown
+    const sortOptions = document.getElementById("sortOptions");
+
+    sortOptions.addEventListener("change", function () {
+      // Get current URL parameters
+      const params = new URLSearchParams(window.location.search);
+
+      // Update or add sort parameter
+      params.set("sort", this.value);
+
+      // Redirect with updated sort
+      window.location.href = `?${params.toString()}`;
+    });
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // Toast notification function
+    function showToast(title, message, type) {
+      // Create toast container if it doesn't exist
+      let toastContainer = document.querySelector(".toast-container");
+      if (!toastContainer) {
+        toastContainer = document.createElement("div");
+        toastContainer.className =
+          "toast-container position-fixed bottom-0 end-0 p-3";
+        document.body.appendChild(toastContainer);
+      }
+
+      // Create toast element
+      const toastEl = document.createElement("div");
+      toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+      toastEl.setAttribute("role", "alert");
+      toastEl.setAttribute("aria-live", "assertive");
+      toastEl.setAttribute("aria-atomic", "true");
+
+      // Toast content
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <strong>${title}</strong>: ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+
+      // Add to container
+      toastContainer.appendChild(toastEl);
+
+      // Initialize and show toast
+      const toast = new bootstrap.Toast(toastEl, {
+        autohide: true,
+        delay: 5000,
+      });
+      toast.show();
+
+      // Remove from DOM after hiding
+      toastEl.addEventListener("hidden.bs.toast", function () {
+        toastEl.remove();
+      });
+    }
+  });
+</script>
+{% endblock %}

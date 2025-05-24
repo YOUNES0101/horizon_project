@@ -1,0 +1,464 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}HORIZONH | WhereLuxury is Redefined{% endblock %}
+
+{% block body_class %}is-hero-page{% endblock %} {# This class will remove body padding-top from base.html if set #}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> {# For Icons #}
+<style>
+  /* Custom styles for Kemilau-inspired sections */
+  .services-section {
+    background-color: #212529; /* Dark background */
+    color: white;
+    position: relative;
+    overflow: hidden; /* To contain the large faded text */
+  }
+  .services-section::before { /* Large faded background text */
+    content: "HORIZONH"; /* Or "The Kemilau" if you prefer */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 15vw; /* Responsive font size */
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.05); /* Very faint */
+    z-index: 1;
+    pointer-events: none;
+  }
+  .service-item {
+    background-color: rgba(50, 50, 50, 0.8); /* Semi-transparent dark item bg */
+    border-radius: 1.5rem; /* Rounded corners */
+    overflow: hidden; /* To clip the image inside */
+    position: relative;
+    z-index: 2; /* Above the faded background text */
+  }
+  .service-item img {
+    border-bottom-left-radius: 1.5rem;
+    border-bottom-right-radius: 1.5rem;
+  }
+  .service-item .btn-light-outline {
+      border-color: rgba(255,255,255,0.5);
+      color: white;
+  }
+  .service-item .btn-light-outline:hover {
+      background-color: white;
+      color: #212529;
+  }
+
+  .dining-card {
+    background-color: #f8f9fa; /* Light grey background for cards */
+    border-radius: 1rem;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  }
+  .dining-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+  }
+  .dining-card .icon {
+    font-size: 2.5rem;
+    color: #6c757d; /* Muted color for icons */
+  }
+
+  .connect-section {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    min-height: 400px; /* Adjust as needed */
+  }
+  .connect-content-wrapper {
+    background-color: rgba(0, 0, 0, 0.6); /* Dark overlay for content readability */
+    border-radius: 50px / 100px; /* Attempt at pill/oval shape - might need more CSS for exact match */
+    /* For a simpler rounded rectangle: border-radius: 2rem; */
+    max-width: 900px; /* Limit width of the content area */
+  }
+  .venue-card .card-img-left {
+      width: 40%; /* Adjust image width */
+      object-fit: cover;
+      border-top-left-radius: .75rem;
+      border-bottom-left-radius: .75rem;
+  }
+
+  /* Ensure carousel items are not too tall if descriptions vary */
+  #roomCarousel .carousel-item .card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  #roomCarousel .carousel-item .card-body {
+    flex-grow: 1;
+  }
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<!-- HERO SECTION WITH VIDEO BACKGROUND (Unchanged) -->
+<section
+  class="hero-section position-relative d-flex align-items-center justify-content-center vh-100"
+  style="overflow: hidden">
+  <!-- Video Background -->
+  <div
+    class="position-absolute top-0 start-0 w-100 h-100"
+    style="z-index: 1; pointer-events: none">
+    <video
+      class="w-100 h-100 object-fit-cover" {# Added object-fit-cover back #}
+      autoplay
+      loop
+      muted
+      playsinline
+      poster="{% static 'images/horizonh-hero-video-poster.jpg' %}"
+      preload="auto"
+      id="heroVideo">
+      <source
+        src="{% static 'videos/horizonh-hero-video.webm' %}"
+        type="video/webm"
+      />
+      <source
+        src="{% static 'videos/6.mp4' %}"
+        type="video/mp4"
+      />
+      Your browser does not support the video tag.
+    </video>
+    <!-- Dark Overlay -->
+    <div
+      class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"
+    ></div>
+  </div>
+
+  <!-- Overlaid Content -->
+  <div
+    class="position-relative text-center text-white w-100"
+    style="z-index: 2">
+    <p class="lead mb">WHERE LUXURY IS REDEFINED</p>
+    <div class="bg-light bg-opacity-75 rounded-3 shadow p-3 d-inline-block mx-3">
+      <form class="row g-2 align-items-end justify-content-center">
+        <div class="col-md col-12">
+          <label for="checkInDate" class="form-label mb-0 text-dark">Check In</label>
+          <input type="date" class="form-control" id="checkInDate"/>
+        </div>
+        <div class="col-md col-12">
+          <label for="checkOutDate" class="form-label mb-0 text-dark">Check Out</label>
+          <input type="date" class="form-control" id="checkOutDate"/>
+        </div>
+        <div class="col-md col-12">
+          <label for="guestsSelect" class="form-label mb-0 text-dark">Guests</label>
+          <select class="form-select" id="guestsSelect">
+            <option>2 Guests</option>
+            <option>1 Guest</option>
+            <option>3 Guests</option>
+            <option>4+ Guests</option>
+          </select>
+        </div>
+        <div class="col-md col-12">
+          <label for="roomTypeSelect" class="form-label mb-0 text-dark">Room Type</label>
+          <select class="form-select" id="roomTypeSelect">
+            <option>All Room Types</option>
+            <option>Deluxe</option>
+            <option>Suite</option>
+          </select>
+        </div>
+        <div class="col-md-auto col-12">
+          <button class="btn btn-primary px-4 w-100" type="submit">
+            Check Availability
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- LEGACY SECTION (Unchanged) -->
+<div class="container-fluid py-5">
+  <div class="container"> {# Add container for content centering #}
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <small class="text-uppercase text-muted">Our Legacy</small>
+        <h2 class="fw-bold mt-2">Crafting Memories Since 1954</h2>
+        <p class="mb-3">
+          For over six decades, HORIZONH has been synonymous with unparalleled
+          elegance and bespoke experiences. Our heritage is woven into every
+          detail, from our architectural grandeur to the warmth of our service.
+        </p>
+        <a href="#" class="btn btn-link ps-0 text-decoration-none">Discover Our Heritage →</a>
+      </div>
+      <div class="col-md-6 text-center">
+        <img
+          src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"
+          class="img-fluid rounded shadow"
+          alt="Hotel Exterior"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========== NEW CONTENT STARTS HERE (Inspired by Kemilau) ========== -->
+
+<!-- YOUR DREAM LUXURIOUS HOTEL ROOM SECTION -->
+<div class="container-fluid bg-white py-5">
+    <div class="container">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-9">
+                <h2 class="fw-bold display-5">Your Dream Luxurious Hotel Room</h2>
+                <p class="text-muted lead fs-6">
+                    Relax in style at HORIZONH, where modern comfort meets timeless charm.
+                </p>
+            </div>
+            <div class="col-md-3 text-md-end">
+                <button class="btn btn-outline-secondary rounded-circle me-2" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <button class="btn btn-outline-secondary rounded-circle" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="roomCarousel" class="carousel slide" data-bs-ride="false"> {# Changed data-bs-ride to false so it doesn't auto-slide #}
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="row g-4">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card h-100 shadow-sm border-0">
+                                <img src="https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Executive Premiere Room" style="height: 250px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title fw-bold">Executive Premiere</h5>
+                                    <p class="card-text text-muted small flex-grow-1">Experience the pinnacle of comfort in our Executive Premiere room, featuring elegant... </p>
+                                    <div class="mt-auto d-flex">
+                                        <a href="#" class="btn btn-outline-secondary btn-sm flex-fill me-2">See Detail</a>
+                                        <a href="#" class="btn btn-dark btn-sm flex-fill">Book Now</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 d-none d-md-block"> {# Hide on small screens, show on md and up #}
+                            <div class="card h-100 shadow-sm border-0">
+                                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Deluxe Room" style="height: 250px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title fw-bold">Deluxe Room</h5>
+                                    <p class="card-text text-muted small flex-grow-1">A perfect blend of style and comfort, our Deluxe Room offers modern furnishings, c...</p>
+                                    <div class="mt-auto d-flex">
+                                        <a href="#" class="btn btn-outline-secondary btn-sm flex-fill me-2">See Detail</a>
+                                        <a href="#" class="btn btn-dark btn-sm flex-fill">Book Now</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 d-none d-lg-block"> {# Hide on medium screens, show on lg and up #}
+                            <div class="card h-100 shadow-sm border-0">
+                                <img src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Executive Room" style="height: 250px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title fw-bold">Executive Room</h5>
+                                    <p class="card-text text-muted small flex-grow-1">Designed for both business and leisure travelers, our Executive Room provides a s...</p>
+                                    <div class="mt-auto d-flex">
+                                        <a href="#" class="btn btn-outline-secondary btn-sm flex-fill me-2">See Detail</a>
+                                        <a href="#" class="btn btn-dark btn-sm flex-fill">Book Now</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="row g-4">
+                         <div class="col-lg-4 col-md-6">
+                            <div class="card h-100 shadow-sm border-0">
+                                <img src="https://images.unsplash.com/photo-1568495248636-6412b249ada9?auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Superior Suite" style="height: 250px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title fw-bold">Superior Suite</h5>
+                                    <p class="card-text text-muted small flex-grow-1">Indulge in the spaciousness and luxury of our Superior Suite, perfect for an extended stay.</p>
+                                    <div class="mt-auto d-flex">
+                                        <a href="#" class="btn btn-outline-secondary btn-sm flex-fill me-2">See Detail</a>
+                                        <a href="#" class="btn btn-dark btn-sm flex-fill">Book Now</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 d-none d-md-block">
+                            <div class="card h-100 shadow-sm border-0">
+                                <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Family Room" style="height: 250px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title fw-bold">Family Room</h5>
+                                    <p class="card-text text-muted small flex-grow-1">Our Family Rooms offer ample space and comfort for you and your loved ones.</p>
+                                    <div class="mt-auto d-flex">
+                                        <a href="#" class="btn btn-outline-secondary btn-sm flex-fill me-2">See Detail</a>
+                                        <a href="#" class="btn btn-dark btn-sm flex-fill">Book Now</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 d-none d-lg-block">
+                             <div class="card h-100 shadow-sm border-0">
+                                <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Presidential Suite" style="height: 250px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title fw-bold">Presidential Suite</h5>
+                                    <p class="card-text text-muted small flex-grow-1">Experience ultimate opulence in our Presidential Suite with panoramic views.</p>
+                                    <div class="mt-auto d-flex">
+                                        <a href="#" class="btn btn-outline-secondary btn-sm flex-fill me-2">See Detail</a>
+                                        <a href="#" class="btn btn-dark btn-sm flex-fill">Book Now</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Add more carousel-items here if needed -->
+            </div>
+            <!-- No prev/next buttons directly on carousel as they are above -->
+        </div>
+    </div>
+</div>
+
+
+<!-- WITH OUR EXPERIENCE SECTION (Matching LATEST Image) -->
+<div class="container-fluid experience-section-v3 py-5">
+  <div class="container text-center py-md-4">
+      <h2 class="display-4 fw-bolder mb-3">With Our Experience We Will Serve You</h2>
+      <p class="lead fs-6 mb-5 text-white-50">Everything you need for a perfect stay at HORIZONH.</p> {# text-white-50 for lighter subheading #}
+
+      <div class="row g-4 justify-content-center">
+          {% for service_name, service_img_url in service_data.items %}
+          <div class="col-xl-3 col-lg-4 col-md-6">
+              <div class="service-card-v3 shadow-sm"> {# Added Bootstrap shadow-sm for base shadow #}
+                  <div class="service-card-v3-content">
+                      <h4 class="card-title fw-bold">{{ service_name }}</h4>
+                      <a href="#" class="btn btn-service-detail-v3 rounded-pill mt-2">
+                          See Detail <i class="fas fa-arrow-right fa-xs ms-1"></i>
+                      </a>
+                  </div>
+                  <img src="{{ service_img_url }}" class="service-card-v3-image" alt="{{ service_name }}">
+              </div>
+          </div>
+          {% endfor %}
+      </div>
+  </div>
+</div>
+
+<!-- A DELIGHTFUL DINING EXPERIENCE SECTION -->
+<!-- <div class="container-fluid bg-white py-5">
+    <div class="container text-center">
+        <h2 class="fw-bold display-5 mb-3">A Delightful Dining Experience</h2>
+        <p class="text-muted lead fs-6 mb-5">
+            Enjoy a memorable dining experience in a stylish and relaxing setting.
+        </p>
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="card dining-card p-4 border-0 shadow-sm h-100">
+                    <div class="icon mb-3"><i class="fas fa-utensils"></i></div>
+                    <h5 class="fw-bold">HORIZONH Restaurant</h5>
+                    <p class="text-muted small">
+                        Our signature restaurant offering international and local delicacies.
+                    </p>
+                    <a href="#" class="btn btn-outline-dark btn-sm mt-auto rounded-pill px-3">Discover More <i class="fas fa-arrow-right fa-xs ms-1"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card dining-card p-4 border-0 shadow-sm h-100">
+                    <div class="icon mb-3"><i class="fas fa-martini-glass"></i></div>
+                    <h5 class="fw-bold">Floating Breakfast</h5>
+                    <p class="text-muted small">
+                        Relax in the comfort of your private pool and we'll serve your preferred breakfast.
+                    </p>
+                    <a href="#" class="btn btn-outline-dark btn-sm mt-auto rounded-pill px-3">Discover More <i class="fas fa-arrow-right fa-xs ms-1"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card dining-card p-4 border-0 shadow-sm h-100">
+                    <div class="icon mb-3"><i class="fas fa-concierge-bell"></i></div>
+                    <h5 class="fw-bold">Room Services</h5>
+                    <p class="text-muted small">
+                        During your stay, we keep you feeling right at home with our room service.
+                    </p>
+                    <a href="" class="btn btn-outline-dark btn-sm mt-auto rounded-pill px-3">Discover More <i class="fas fa-arrow-right fa-xs ms-1"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card dining-card p-4 border-0 shadow-sm h-100">
+                    <div class="icon mb-3"><i class="fas fa-cookie-bite"></i></div>
+                    <h5 class="fw-bold">Rooftop Lounge</h5>
+                    <p class="text-muted small">
+                        Delicious catering for any occasion, featuring fresh ingredients and rich flavors.
+                    </p>
+                    <a href="#" class="btn btn-outline-dark btn-sm mt-auto rounded-pill px-3">Discover More <i class="fas fa-arrow-right fa-xs ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+<!-- CONNECT WITH US SECTION -->
+
+<div class="container-fluid connect-section py-5 d-flex align-items-center justify-content-center" style="background-image: url('https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1200&q=80');">
+    <div class="connect-content-wrapper text-center text-white p-5 mx-3">
+        <h2 class="display-4 fw-bold mb-3">Connect With Us</h2>
+        <p class="lead fs-6 mb-4">
+            We're here to assist you! Reach out to us for inquiries, bookings, or any information you need. Let's connect and make your experience seamless.
+        </p>
+        <a href="#" class="btn btn-light btn-lg rounded-pill px-4">Get In Touch</a>
+    </div>
+</div>
+
+<!-- VENUES/VILLAS SECTION -->
+<div class="container-fluid bg-white py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card venue-card flex-md-row shadow-sm border-0 h-100" style="border-radius: .75rem;">
+                    <img src="https://images.unsplash.com/photo-1524232695803-394a2f76f3bc?auto=format&fit=crop&w=500&q=80" class="card-img-left d-none d-md-block" alt="Umalas Venue">
+                    <img src="https://images.unsplash.com/photo-1524232695803-394a2f76f3bc?auto=format&fit=crop&w=500&q=80" class="card-img-top d-md-none" alt="Umalas Venue" style="border-top-left-radius: .75rem; border-top-right-radius: .75rem;">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <h4 class="fw-bold">Event Venues</h4>
+                        <p class="text-muted small flex-grow-1">A stylish and versatile space for unforgettable events, weddings, and corporate gatherings.</p>
+                        <a href="#" class="btn btn-dark btn-sm mt-auto align-self-start rounded-pill px-3">Learn More</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card venue-card flex-md-row shadow-sm border-0 h-100" style="border-radius: .75rem;">
+                    <img src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=500&q=80" class="card-img-left d-none d-md-block" alt="Whole Villa">
+                    <img src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=500&q=80" class="card-img-top d-md-none" alt="Whole Villa" style="border-top-left-radius: .75rem; border-top-right-radius: .75rem;">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <h4 class="fw-bold">Private Villas</h4>
+                        <p class="text-muted small flex-grow-1">An exclusive retreat with ultimate privacy for your perfect stay. Ideal for families or groups.</p>
+                        <a href="#" class="btn btn-dark btn-sm mt-auto align-self-start rounded-pill px-3">Learn More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GUEST EXPERIENCES SECTION (Whispers of Luxury) - Re-using your existing section with slight Kemilau flavor -->
+<div class="container-fluid bg-light py-5 text-center">
+  <div class="container">
+    <h2 class="fw-bold display-5 mb-3">Whispers of Luxury</h2>
+    <p class="text-muted lead fs-6">
+      Hear what our guests say about their unforgettable HORIZONH experiences.
+    </p>
+    <!-- Placeholder for actual testimonials/slider -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <blockquote class="blockquote">
+                <p class="fst-italic fs-6">"An absolutely breathtaking experience from start to finish. The attention to detail was immaculate."</p>
+                <footer class="blockquote-footer mt-0">Jane Doe</footer>
+            </blockquote>
+        </div>
+        <div class="col-md-4">
+            <blockquote class="blockquote">
+                <p class="fst-italic fs-6">"The service was beyond compare. Every staff member made us feel like royalty. We will be back!"</p>
+                <footer class="blockquote-footer mt-0">John Smith</footer>
+            </blockquote>
+        </div>
+        <div class="col-md-4">
+            <blockquote class="blockquote">
+                <p class="fst-italic fs-6">"Luxury redefined indeed! The amenities, the views, the dining – everything was perfect."</p>
+                <footer class="blockquote-footer mt-0">Alice Brown</footer>
+            </blockquote>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

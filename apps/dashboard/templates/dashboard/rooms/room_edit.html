@@ -1,0 +1,394 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% load template_filter %}
+
+{% block title %}Edit Room{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-dark fw-bold">Edit Room: {{ room.number }}</h5>
+                        <a href="{% url 'dashboard:room_list' %}" class="btn btn-outline-secondary btn-sm px-3">
+                            <i class="bx bx-arrow-back me-1"></i> Back to Rooms
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    {# Assuming 'room' object is passed in context #}
+                    <form id="roomEditForm" method="post" enctype="multipart/form-data" action="{% url 'dashboard:room_edit' room.id %}" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row g-4 mb-4">
+                            <!-- Room Information Section -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-header bg-light py-3">
+                                        <h6 class="mb-0 fw-bold">Room Information</h6>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <div class="mb-3">
+                                            <label for="room_number" class="form-label">Room Number <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="room_number" name="number" value="{{ room.number }}" required>
+                                            <div class="invalid-feedback">Please enter a room number.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="room_type" class="form-label">Room Type <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="room_type" name="room_type" required>
+                                                <option value="" disabled>Select room type</option>
+                                                {% for type_key, type_name in room_types %}
+                                                <option value="{{ type_key }}" {% if room.room_type == type_key %}selected{% endif %}>{{ type_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">Please select a room type.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="floor" class="form-label">Floor <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="floor" name="floor" min="1" value="{{ room.floor }}" required>
+                                            <div class="invalid-feedback">Please enter a valid floor number.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="price" class="form-label">Price (per night) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="{{ room.price|floatformat:2 }}" required>
+                                            </div>
+                                            <small class="text-muted">Enter the price per night in USD</small>
+                                            <div class="invalid-feedback">Please enter a valid price.</div>
+                                        </div>
+
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="is_available" name="is_available" {% if room.is_available %}checked{% endif %}>
+                                            <label class="form-check-label" for="is_available">Available for booking</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Room Image Section -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-header bg-light py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bx bx-image me-2"></i>
+                                            <h6 class="mb-0 fw-bold">Room Image</h6>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <div class="image-upload-area" id="imageUploadArea">
+                                            <div class="upload-icon" {% if room.image %}style="display: none;"{% endif %}>
+                                                <i class="bx bx-upload"></i>
+                                            </div>
+                                            <div class="upload-text" {% if room.image %}style="display: none;"{% endif %}>
+                                                <p>Click to upload an image or drag and drop</p>
+                                                <p class="text-muted small">Supported formats: JPG, PNG, WEBP</p>
+                                            </div>
+                                            <img src="{% if room.image %}{{ room.image.url }}{% else %}{% endif %}" alt="Room Preview" id="imagePreview" class="img-preview" {% if not room.image %}style="display: none;"{% endif %}>
+                                            <input type="file" name="image" id="imageUpload" accept="image/*" class="d-none">
+                                            {# Hidden field to track if image should be cleared #}
+                                            <input type="hidden" name="clear_image" id="clearImageInput" value="false">
+                                        </div>
+
+                                        <div class="text-center mt-3">
+                                            <button type="button" class="btn btn-primary px-4" id="uploadBtn" {% if room.image %}style="display: none;"{% endif %}>
+                                                <i class="bx bx-upload me-2"></i>Upload Image
+                                            </button>
+
+                                            <div class="image-actions mt-2" id="imageActions" {% if not room.image %}style="display: none;"{% endif %}>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="changeImageBtn">
+                                                    <i class="bx bx-refresh me-1"></i>Change
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" id="removeImageBtn">
+                                                    <i class="bx bx-trash me-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Room Amenities Section -->
+                        <div class="form-section mb-4">
+                            <h5 class="form-section-title">
+                                <i class="bx bx-check-square me-2"></i> Room Amenities
+                            </h5>
+
+                            <div class="row g-3">
+                                {# Assuming room.amenities is a ManyToMany field returning amenity objects or their keys #}
+                                {# You might need a custom template tag 'has_amenity' or adjust based on your context #}
+                                {% for amenity_key, amenity_name in amenities %}
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <input type="checkbox" class="amenity-checkbox" id="amenity_{{ amenity_key }}" name="amenities" value="{{ amenity_key }}"{% if amenity_key in room.amenities %}checked{% endif %}>
+                                    <label for="amenity_{{ amenity_key }}" class="amenity-item">
+                                        <i class="bx {{ amenity_icons|get_item:amenity_key }} amenity-icon"></i>
+                                        <span class="amenity-name">{{ amenity_name }}</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-outline-secondary me-2 px-4" onclick="window.location.href='{% url 'dashboard:room_list' %}'"> Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bx bx-save me-1"></i> Save Changes </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.getElementById('roomEditForm');
+
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            form.classList.add('was-validated');
+        });
+
+        // Image upload functionality
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+        const imageUploadArea = document.getElementById('imageUploadArea');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const imageActions = document.getElementById('imageActions');
+        const changeImageBtn = document.getElementById('changeImageBtn');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+        const clearImageInput = document.getElementById('clearImageInput');
+        const initialImageSrc = imagePreview.src;
+        const hasInitialImage = initialImageSrc && initialImageSrc !== window.location.href; // Check if there's an initial image
+
+        // Function to show image preview
+        function showImagePreview(src) {
+            imagePreview.src = src;
+            imagePreview.style.display = 'block';
+            document.querySelector('.upload-icon').style.display = 'none';
+            document.querySelector('.upload-text').style.display = 'none';
+            uploadBtn.style.display = 'none';
+            imageActions.style.display = 'block';
+            clearImageInput.value = 'false'; // Reset clear flag when new image is selected
+        }
+
+        // Function to reset image upload area (show upload prompt)
+        function resetImageUploadArea() {
+            imageUpload.value = ''; // Clear file input
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            document.querySelector('.upload-icon').style.display = 'block';
+            document.querySelector('.upload-text').style.display = 'block';
+            uploadBtn.style.display = 'inline-block';
+            imageActions.style.display = 'none';
+            clearImageInput.value = 'true'; // Set flag to clear image on server
+        }
+
+        // Click on upload area to trigger file input
+        imageUploadArea.addEventListener('click', function() {
+            if (imagePreview.style.display === 'none') { // Only trigger if no image is shown
+                 imageUpload.click();
+            }
+        });
+
+        // Upload button click
+        uploadBtn.addEventListener('click', function() {
+            imageUpload.click();
+        });
+
+        // Handle file selection
+        imageUpload.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    showImagePreview(e.target.result);
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        // Change image button
+        changeImageBtn.addEventListener('click', function() {
+            imageUpload.click();
+        });
+
+        // Remove image button
+        removeImageBtn.addEventListener('click', function() {
+            resetImageUploadArea();
+        });
+
+        // Drag and drop functionality
+        imageUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            if (imagePreview.style.display === 'none') { // Only allow drop if no image shown
+                this.classList.add('dragover');
+            }
+        });
+
+        imageUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        imageUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+
+            if (imagePreview.style.display === 'none' && e.dataTransfer.files && e.dataTransfer.files[0]) {
+                imageUpload.files = e.dataTransfer.files;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    showImagePreview(e.target.result);
+                };
+                reader.readAsDataURL(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Price input formatting (same as add form)
+        const priceInput = document.getElementById('price');
+        priceInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9.]/g, '');
+            const parts = this.value.split('.');
+            if (parts.length > 2) {
+                this.value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            if (parts.length > 1 && parts[1].length > 2) {
+                this.value = parts[0] + '.' + parts[1].substring(0, 2);
+            }
+        });
+
+        // Initial setup for image if exists
+        if (hasInitialImage) {
+             // Already handled by template rendering
+        }
+
+    });
+</script>
+
+<style>
+    /* Form section styles */
+    .form-section {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: #333;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Image upload styles */
+    .image-upload-area {
+        border: 1px dashed #cfd4da;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 2rem;
+        position: relative;
+    }
+
+    .image-upload-area:hover {
+        border-color: #6c757d;
+        background-color: #f1f3f5;
+    }
+
+    .image-upload-area.dragover {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
+    .upload-text {
+        text-align: center;
+    }
+
+    .upload-text p {
+        margin-bottom: 0.25rem;
+    }
+
+    .img-preview {
+        max-width: 100%;
+        max-height: 180px;
+        object-fit: contain;
+        display: block; /* Ensure it takes space even if src is empty initially */
+    }
+
+    /* Amenity styles */
+    .amenity-checkbox {
+        display: none;
+    }
+
+    .amenity-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #fff;
+    }
+
+    .amenity-item:hover {
+        border-color: #adb5bd;
+        background-color: #f8f9fa;
+    }
+
+    .amenity-checkbox:checked + .amenity-item {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .amenity-icon {
+        font-size: 1.25rem;
+        margin-right: 0.75rem;
+        color: #6c757d;
+    }
+
+    .amenity-checkbox:checked + .amenity-item .amenity-icon {
+        color: #0d6efd;
+    }
+
+    .amenity-name {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .amenity-checkbox:checked + .amenity-item .amenity-name {
+        color: #0d6efd;
+    }
+
+</style>
+{% endblock %}
+

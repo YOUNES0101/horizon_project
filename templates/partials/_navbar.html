@@ -1,0 +1,496 @@
+{% load static %}
+
+<nav
+  id="mainNavbar"
+  class="navbar navbar-expand-lg navbar-dark fixed-top main-navbar py-3"
+>
+  <div class="container">
+    <!-- Mobile Toggler (Positioned Left for Mobile) -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="offcanvas"
+      data-bs-target="#mobileNavOffcanvas"
+      aria-controls="mobileNavOffcanvas"
+      aria-label="Toggle navigation"
+    >
+      <i class="bx bx-menu"></i>
+    </button>
+
+    <!-- Desktop Left Links -->
+    <div class="collapse navbar-collapse order-lg-1" id="desktopNavLeft">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+            href="{% url 'core:home' %}"
+            >Home</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.resolver_match.url_name == 'rooms_and_suites' %}active{% endif %}"
+            href="{% url 'rooms:rooms_and_suites' %}"
+            >Rooms & Suites</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.resolver_match.url_name == 'location' %}active{% endif %}"
+            href="#"
+            >Location</a
+          >
+          {# Assuming a location section/page #}
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}"
+            href="{% url 'core:contact' %}"
+            >Contact</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <!-- Centered Logo (Visible on Desktop) -->
+    <a
+      class="navbar-brand mx-auto order-lg-2 d-none d-lg-block"
+      href="{% url 'core:home' %}"
+      >HORIZONH</a
+    >
+    <!-- Mobile Logo (Visible on Mobile when Toggler is Present) -->
+    <a
+      class="navbar-brand d-lg-none order-1 me-auto"
+      href="{% url 'core:home' %}"
+      >HORIZONH</a
+    >
+
+    <!-- Desktop Right Links -->
+    <div class="collapse navbar-collapse order-lg-3" id="desktopNavRight">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+        {% if user.is_authenticated %}
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="navbarUserDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <i class="bx bx-user-circle me-1"></i>
+            {{user.username|default:user.email|truncatechars:15 }}
+          </a>
+          <ul
+            class="dropdown-menu dropdown-menu-end"
+            aria-labelledby="navbarUserDropdown"
+          >
+            <li>
+              <a class="dropdown-item" href="#"
+                ><i class="bx bx-user me-2"></i>My Profile</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="#"
+                ><i class="bx bx-calendar-check me-2"></i>My Bookings</a
+              >
+            </li>
+            {% if user.is_staff or user.is_superuser %}
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="{% url 'dashboard:dashboard_home' %}"
+                ><i class="bx bx-grid-alt me-2"></i>Dashboard</a
+              >
+            </li>
+            {% endif %}
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <form
+                method="post"
+                action="{% url 'core:logout' %}"
+                class="d-inline"
+              >
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="dropdown-item border-0 bg-transparent"
+                >
+                  <i class="bx bx-log-out me-2"></i>Logout
+                </button>
+              </form>
+            </li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.resolver_match.url_name == 'account_login' %}active{% endif %}"
+            href="{% url 'account_login' %}"
+            >Sign In</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.resolver_match.url_name == 'account_signup' %}active{% endif %}"
+            href="{% url 'account_signup' %}"
+            >Register</a
+          >
+        </li>
+        {% endif %}
+        <li class="nav-item ms-lg-3">
+          <a
+            class="btn btn-primary btn-book-now"
+            href="{% url 'rooms:rooms_and_suites' %}"
+            role="button"
+            >Book Now</a
+          >
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Offcanvas Menu -->
+<div
+  class="offcanvas offcanvas-start text-bg-dark"
+  tabindex="-1"
+  id="mobileNavOffcanvas"
+  aria-labelledby="mobileNavOffcanvasLabel"
+>
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="mobileNavOffcanvasLabel">HORIZONH</h5>
+    <button
+      type="button"
+      class="btn-close btn-close-white"
+      data-bs-dismiss="offcanvas"
+      aria-label="Close"
+    ></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <ul class="navbar-nav flex-grow-1 justify-content-center text-center">
+      <li class="nav-item">
+        <a
+          class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+          href="{% url 'core:home' %}"
+          >Home</a
+        >
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link {% if request.resolver_match.url_name == 'rooms_and_suites' %}active{% endif %}"
+          href="{% url 'rooms:rooms_and_suites' %}"
+          >Rooms & Suites</a
+        >
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link {% if request.resolver_match.url_name == 'location' %}active{% endif %}"
+          href="#"
+          >Location</a
+        >
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}"
+          href="{% url 'core:contact' %}"
+          >Contact</a
+        >
+      </li>
+
+      <hr class="text-white-50 my-3" />
+
+      {% if user.is_authenticated %}
+      <li class="nav-item dropdown">
+        <a
+          class="nav-link dropdown-toggle"
+          href="#"
+          id="mobileUserDropdown"
+          role="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          <i class="bx bx-user-circle me-1"></i>
+          {{user.username|default:user.email|truncatechars:15 }}
+        </a>
+        <ul
+          class="dropdown-menu dropdown-menu-dark text-center mx-auto"
+          aria-labelledby="mobileUserDropdown"
+        >
+          <li><a class="dropdown-item" href="#">My Profile</a></li>
+          <li><a class="dropdown-item" href="#">My Bookings</a></li>
+          {% if user.is_staff or user.is_superuser %}
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <a class="dropdown-item" href="{% url 'dashboard:dashboard_home' %}"
+              >Dashboard</a
+            >
+          </li>
+          {% endif %}
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <form
+              method="post"
+              action="{% url 'core:logout' %}"
+              class="d-inline"
+            >
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="dropdown-item border-0 bg-transparent"
+              >
+                Logout
+              </button>
+            </form>
+          </li>
+        </ul>
+      </li>
+      {% else %}
+      <li class="nav-item">
+        <a
+          class="nav-link {% if request.resolver_match.url_name == 'account_login' %}active{% endif %}"
+          href="{% url 'account_login' %}"
+          >Sign In</a
+        >
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link {% if request.resolver_match.url_name == 'account_signup' %}active{% endif %}"
+          href="{% url 'account_signup' %}"
+          >Register</a
+        >
+      </li>
+      {% endif %}
+    </ul>
+    <div class="mt-auto mb-3 text-center">
+      <a class="btn btn-primary btn-book-now w-75" href="#" role="button"
+        >Book Now</a
+      >
+    </div>
+  </div>
+</div>
+
+<!-- Styles for Enhanced Navbar -->
+<style>
+  :root {
+    --navbar-height: 80px; /* Adjust as needed */
+    --navbar-bg-scrolled: rgba(
+      25,
+      28,
+      31,
+      0.85
+    ); /* Darker, slightly less transparent */
+    --navbar-blur: 10px;
+    --navbar-text-color: #ffffff;
+    --navbar-text-hover-color: #e0e0e0;
+    --navbar-accent-color: #1a73e8; /* Professional blue */
+    --navbar-accent-hover-bg: #1557b0; /* Darker blue for hover */
+    --navbar-accent-hover-text: #ffffff;
+    --navbar-transition-speed: 0.35s;
+  }
+
+  .main-navbar {
+    background-color: transparent;
+    transition: background-color var(--navbar-transition-speed) ease,
+      box-shadow var(--navbar-transition-speed) ease,
+      padding var(--navbar-transition-speed) ease;
+    padding-top: 1rem; /* Initial padding */
+    padding-bottom: 1rem;
+  }
+
+  .main-navbar.scrolled {
+    background-color: var(--navbar-bg-scrolled);
+    backdrop-filter: blur(var(--navbar-blur));
+    -webkit-backdrop-filter: blur(var(--navbar-blur)); /* Safari */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    padding-top: 0.5rem; /* Reduced padding on scroll */
+    padding-bottom: 0.5rem;
+  }
+
+  .main-navbar .navbar-brand {
+    color: var(--navbar-text-color);
+    font-weight: 700;
+    font-size: 1.6rem; /* Slightly larger brand */
+    letter-spacing: 0.05em;
+    transition: color var(--navbar-transition-speed) ease;
+  }
+
+  .main-navbar .nav-link {
+    color: var(--navbar-text-color);
+    font-weight: 500; /* Slightly bolder links */
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    position: relative;
+    transition: color var(--navbar-transition-speed) ease;
+  }
+
+  .main-navbar .nav-link::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--navbar-accent-color);
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .main-navbar .nav-link:hover::after,
+  .main-navbar .nav-link.active::after {
+    width: 60%; /* Underline effect width */
+    visibility: visible;
+  }
+
+  .main-navbar .nav-link:hover,
+  .main-navbar .nav-link.active {
+    color: var(
+      --navbar-text-hover-color
+    ); /* Slightly lighter on hover/active */
+  }
+
+  /* Dropdown styling */
+  .main-navbar .dropdown-menu {
+    background-color: rgba(
+      35,
+      38,
+      41,
+      0.95
+    ); /* Slightly different dark for dropdown */
+    border: none;
+    border-radius: 0.35rem;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    margin-top: 0.5rem;
+    padding: 0.5rem 0;
+  }
+
+  .main-navbar .dropdown-item {
+    color: #d0d0d0;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .main-navbar .dropdown-item i {
+    color: #a0a0a0; /* Muted icon color */
+    transition: color 0.2s ease;
+  }
+
+  .main-navbar .dropdown-item:hover,
+  .main-navbar .dropdown-item:focus {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--navbar-text-color);
+  }
+  .main-navbar .dropdown-item:hover i {
+    color: var(--navbar-accent-color);
+  }
+
+  .main-navbar .dropdown-divider {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Book Now Button */
+  .btn-book-now {
+    background-color: #1a73e8; /* Professional blue color */
+    border-color: var(--navbar-accent-color);
+    color: var(--navbar-accent-hover-text);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.6rem 1.5rem;
+    border-radius: 50px; /* Pill shape */
+    transition: background-color var(--navbar-transition-speed) ease,
+      border-color var(--navbar-transition-speed) ease, transform 0.2s ease;
+  }
+
+  .btn-book-now:hover {
+    background-color: var(--navbar-accent-hover-bg);
+    border-color: var(--navbar-accent-hover-bg);
+    color: var(--navbar-accent-hover-text);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Mobile Toggler */
+  .main-navbar .navbar-toggler {
+    border: none;
+    color: var(--navbar-text-color);
+    font-size: 1.5rem;
+    padding: 0.25rem 0.5rem;
+  }
+  .main-navbar .navbar-toggler:focus {
+    box-shadow: none;
+  }
+
+  /* Mobile Offcanvas */
+  .offcanvas {
+    background-color: #1c1f22; /* Slightly different dark for offcanvas */
+    max-width: 80%; /* Adjust width */
+  }
+  .offcanvas .offcanvas-title {
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .offcanvas .nav-link {
+    font-size: 1.1rem;
+    padding: 0.8rem 1rem;
+    color: #d0d0d0;
+    font-weight: 500;
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+  .offcanvas .nav-link:hover,
+  .offcanvas .nav-link.active {
+    color: var(--navbar-text-color);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  .offcanvas .dropdown-menu {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  .offcanvas .dropdown-item {
+    color: #b0b0b0;
+    padding: 0.6rem 1rem;
+  }
+  .offcanvas .dropdown-item:hover {
+    color: var(--navbar-text-color);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  .offcanvas .btn-book-now {
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+  }
+
+  /* Ensure content doesn't jump below fixed navbar ONLY on non-hero pages */
+  body:not(.is-hero-page) {
+    padding-top: var(--navbar-height); /* Add padding to body */
+  }
+</style>
+
+<!-- Script for Navbar Scroll Effect -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const mainNavbar = document.getElementById("mainNavbar");
+    const scrollThreshold = 50; // Pixels to scroll before background appears
+
+    function handleScroll() {
+      if (mainNavbar) {
+        if (window.scrollY > scrollThreshold) {
+          mainNavbar.classList.add("scrolled");
+        } else {
+          mainNavbar.classList.remove("scrolled");
+        }
+      }
+    }
+
+    // Initial check in case page is loaded scrolled
+    handleScroll();
+
+    // Add scroll listener
+    window.addEventListener("scroll", handleScroll);
+  });
+</script>

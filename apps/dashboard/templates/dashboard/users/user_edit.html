@@ -1,0 +1,647 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+
+{% block title %}Edit User - HORIZONH{% endblock %}
+{% block header_title %}Edit User{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Edit User Form Specific Styles */
+  .form-card {
+    border: none;
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+  }
+
+  .form-card:hover {
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+  }
+
+  .form-section-title {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.25);
+  }
+
+  /* Password Strength Meter */
+  .password-strength-meter {
+    height: 5px;
+    background-color: var(--gray-light);
+    border-radius: 3px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .password-strength-meter-bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+
+  .password-strength-text {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .strength-weak .password-strength-meter-bar {
+    width: 25%;
+    background-color: var(--danger);
+  }
+
+  .strength-fair .password-strength-meter-bar {
+    width: 50%;
+    background-color: var(--warning);
+  }
+
+  .strength-good .password-strength-meter-bar {
+    width: 75%;
+    background-color: var(--info);
+  }
+
+  .strength-strong .password-strength-meter-bar {
+    width: 100%;
+    background-color: var(--success);
+  }
+
+  .strength-weak .password-strength-text {
+    color: var(--danger);
+  }
+
+  .strength-fair .password-strength-text {
+    color: var(--warning);
+  }
+
+  .strength-good .password-strength-text {
+    color: var(--info);
+  }
+
+  .strength-strong .password-strength-text {
+    color: var(--success);
+  }
+
+  /* Password Toggle */
+  .password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--gray);
+    transition: color 0.2s ease;
+  }
+
+  .password-toggle:hover {
+    color: var(--primary);
+  }
+
+  /* Form Actions */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  /* User Info Header */
+  .user-info-header {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+
+  .user-info-header:hover {
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .user-info-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-right: 1.5rem;
+  }
+
+  .user-info-details h4 {
+    margin-bottom: 0.25rem;
+    font-family: var(--font-heading);
+    color: var(--dark);
+  }
+
+  .user-info-meta {
+    display: flex;
+    align-items: center;
+    color: var(--gray);
+    font-size: 0.9rem;
+  }
+
+  .user-info-meta-item {
+    display: flex;
+    align-items: center;
+    margin-right: 1.5rem;
+  }
+
+  .user-info-meta-item i {
+    margin-right: 0.5rem;
+  }
+
+  /* Animation Classes */
+  .animate-pop-in {
+    animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  @keyframes popIn {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+  .delay-6 { animation-delay: 0.6s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+      <h1 class="h3 mb-0 text-gray-800 font-weight-bold animate-pop-in">Edit User</h1>
+      <p class="mb-0 text-muted animate-pop-in delay-1">Update user details and permissions</p>
+    </div>
+    <div class="col-md-6 text-md-end animate-pop-in delay-2">
+      <a href="{% url 'dashboard:user_list' %}" class="btn btn-outline-secondary">
+        <i class="bx bx-arrow-back me-1"></i> Back to Users
+      </a>
+    </div>
+  </div>
+
+  <!-- User Info Header -->
+  <div class="user-info-header animate-pop-in delay-3">
+    <div class="user-info-avatar">
+      {% if user.first_name %}
+        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+      {% else %}
+        {{ user.username|first|upper }}
+      {% endif %}
+    </div>
+    <div class="user-info-details">
+      <h4>
+        {% if user.get_full_name %}
+          {{ user.get_full_name }}
+        {% else %}
+          {{ user.username }}
+        {% endif %}
+      </h4>
+      <div class="user-info-meta">
+        <div class="user-info-meta-item">
+          <i class="bx bx-envelope"></i>
+          <span>{{ user.email }}</span>
+        </div>
+        <div class="user-info-meta-item">
+          <i class="bx bx-calendar"></i>
+          <span>Joined {{ user.date_joined|date:"M d, Y" }}</span>
+        </div>
+        <div class="user-info-meta-item">
+          <i class="bx bx-time"></i>
+          <span>Last login:
+            {% if user.last_login %}
+              {{ user.last_login|date:"M d, Y" }}
+            {% else %}
+              Never
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit User Form -->
+  <div class="row">
+    <div class="col-lg-12">
+      <form method="post" id="userForm">
+        {% csrf_token %}
+
+        <div class="card form-card mb-4 animate-pop-in delay-4">
+          <div class="card-body">
+            <!-- Basic Information Section -->
+            <div class="form-section">
+              <h5 class="form-section-title">
+                <i class="bx bx-user-circle me-2"></i> Basic Information
+              </h5>
+
+              <div class="row g-4">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                    <div class="form-text">Enter a unique username (e.g., john_doe)</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="first_name" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="last_name" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Password Section -->
+            <div class="form-section">
+              <h5 class="form-section-title">
+                <i class="bx bx-lock me-2"></i> Change Password
+              </h5>
+
+              <div class="row g-4">
+                <div class="col-md-12">
+                  <div class="alert alert-info">
+                    <i class="bx bx-info-circle me-2"></i>
+                    Leave the password fields blank if you don't want to change the password.
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3 position-relative">
+                    <label for="password1" class="form-label">New Password</label>
+                    <input type="password" class="form-control" id="password1" name="password1">
+                    <i class="bx bx-show password-toggle" id="password1Toggle"></i>
+                    <div class="password-strength-meter">
+                      <div class="password-strength-meter-bar"></div>
+                    </div>
+                    <div class="password-strength-text">Password strength: Not set</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3 position-relative">
+                    <label for="password2" class="form-label">Confirm New Password</label>
+                    <input type="password" class="form-control" id="password2" name="password2">
+                    <i class="bx bx-show password-toggle" id="password2Toggle"></i>
+                  </div>
+                </div>
+
+                <div class="col-md-12">
+                  <div class="alert alert-info">
+                    <i class="bx bx-info-circle me-2"></i>
+                    <strong>Password Requirements:</strong>
+                    <ul class="mb-0 mt-1">
+                      <li>At least 8 characters long</li>
+                      <li>Contains at least one uppercase letter</li>
+                      <li>Contains at least one lowercase letter</li>
+                      <li>Contains at least one number</li>
+                      <li>Contains at least one special character</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Permissions Section -->
+            <div class="form-section">
+              <h5 class="form-section-title">
+                <i class="bx bx-shield-quarter me-2"></i> Permissions
+              </h5>
+
+              <div class="row g-4">
+                <div class="col-md-12">
+                  <div class="mb-3">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="is_staff" name="is_staff" {% if user.is_staff %}checked{% endif %}>
+                      <label class="form-check-label" for="is_staff">Staff Status</label>
+                    </div>
+                    <div class="form-text">Designates whether the user can log into the admin site.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-12">
+                  <div class="mb-3">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if user.is_active %}checked{% endif %}>
+                      <label class="form-check-label" for="is_active">Active Status</label>
+                    </div>
+                    <div class="form-text">Designates whether this user account should be considered active.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline-secondary" id="cancelBtn">
+                <i class="bx bx-x me-1"></i> Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" id="saveBtn">
+                <i class="bx bx-save me-1"></i> Update User
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Password Strength Meter
+    const password1 = document.getElementById('password1');
+    const passwordStrengthMeter = document.querySelector('.password-strength-meter');
+    const passwordStrengthBar = document.querySelector('.password-strength-meter-bar');
+    const passwordStrengthText = document.querySelector('.password-strength-text');
+
+    password1.addEventListener('input', function() {
+      const value = this.value;
+      let strength = 0;
+      let strengthText = 'Not set';
+      let strengthClass = '';
+
+      if (value.length > 0) {
+        // Check length
+        if (value.length >= 8) {
+          strength += 1;
+        }
+
+        // Check for uppercase letters
+        if (/[A-Z]/.test(value)) {
+          strength += 1;
+        }
+
+        // Check for lowercase letters
+        if (/[a-z]/.test(value)) {
+          strength += 1;
+        }
+
+        // Check for numbers
+        if (/[0-9]/.test(value)) {
+          strength += 1;
+        }
+
+        // Check for special characters
+        if (/[^A-Za-z0-9]/.test(value)) {
+          strength += 1;
+        }
+
+        // Set strength text and class
+        if (strength === 0) {
+          strengthText = 'Very Weak';
+          strengthClass = 'strength-weak';
+        } else if (strength <= 2) {
+          strengthText = 'Weak';
+          strengthClass = 'strength-weak';
+        } else if (strength === 3) {
+          strengthText = 'Fair';
+          strengthClass = 'strength-fair';
+        } else if (strength === 4) {
+          strengthText = 'Good';
+          strengthClass = 'strength-good';
+        } else {
+          strengthText = 'Strong';
+          strengthClass = 'strength-strong';
+        }
+      }
+
+      // Update strength meter
+      passwordStrengthMeter.className = 'password-strength-meter ' + strengthClass;
+      passwordStrengthText.textContent = 'Password strength: ' + strengthText;
+      passwordStrengthText.className = 'password-strength-text ' + strengthClass;
+    });
+
+    // Password Toggle
+    const password1Toggle = document.getElementById('password1Toggle');
+    const password2Toggle = document.getElementById('password2Toggle');
+    const password2 = document.getElementById('password2');
+
+    password1Toggle.addEventListener('click', function() {
+      togglePasswordVisibility(password1, this);
+    });
+
+    password2Toggle.addEventListener('click', function() {
+      togglePasswordVisibility(password2, this);
+    });
+
+    function togglePasswordVisibility(passwordInput, toggleIcon) {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('bx-show');
+        toggleIcon.classList.add('bx-hide');
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('bx-hide');
+        toggleIcon.classList.add('bx-show');
+      }
+    }
+
+    // Form Validation and Submission
+    const userForm = document.getElementById('userForm');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    userForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Validate form
+      if (!validateForm()) {
+        return;
+      }
+
+      // Disable save button to prevent multiple submissions
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-1"></i> Updating...';
+
+      // Submit form
+      fetch('/dashboard/users/{{ user.id }}/edit/', {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Show success message
+          showToast('Success', 'User updated successfully!', 'success');
+
+          // Redirect to user list after a short delay
+          setTimeout(() => {
+            window.location.href = '/dashboard/users/';
+          }, 1500);
+        } else {
+          // Show error message
+          showToast('Error', data.message || 'Failed to update user. Please try again.', 'danger');
+
+          // Re-enable save button
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="bx bx-save me-1"></i> Update User';
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Error', 'An error occurred while updating the user.', 'danger');
+
+        // Re-enable save button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bx bx-save me-1"></i> Update User';
+      });
+    });
+
+    // Cancel button
+    cancelBtn.addEventListener('click', function() {
+      // Show confirmation dialog
+      if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+        window.location.href = '/dashboard/users/';
+      }
+    });
+
+    // Form validation
+    function validateForm() {
+      let isValid = true;
+
+      // Reset previous validation errors
+      document.querySelectorAll('.is-invalid').forEach(el => {
+        el.classList.remove('is-invalid');
+      });
+
+      // Validate username
+      const username = document.getElementById('username');
+      if (!username.value.trim()) {
+        username.classList.add('is-invalid');
+        showToast('Validation Error', 'Username is required.', 'warning');
+        isValid = false;
+      }
+
+      // Validate email
+      const email = document.getElementById('email');
+      if (!email.value.trim() || !isValidEmail(email.value)) {
+        email.classList.add('is-invalid');
+        showToast('Validation Error', 'Please enter a valid email address.', 'warning');
+        isValid = false;
+      }
+
+      // Validate password (only if provided)
+      if (password1.value || password2.value) {
+        if (password1.value.length < 8) {
+          password1.classList.add('is-invalid');
+          showToast('Validation Error', 'Password must be at least 8 characters long.', 'warning');
+          isValid = false;
+        }
+
+        if (password1.value !== password2.value) {
+          password2.classList.add('is-invalid');
+          showToast('Validation Error', 'Passwords do not match.', 'warning');
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    }
+
+    // Email validation helper
+    function isValidEmail(email) {
+      const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(String(email).toLowerCase());
+    }
+
+    // Toast notification function
+    function showToast(title, message, type) {
+      // Create toast container if it doesn't exist
+      let toastContainer = document.querySelector('.toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+      }
+
+      // Create toast element
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+
+      // Toast content
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <strong>${title}</strong>: ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+
+      // Add to container
+      toastContainer.appendChild(toastEl);
+
+      // Initialize and show toast
+      const toast = new bootstrap.Toast(toastEl, {
+        autohide: true,
+        delay: 5000
+      });
+      toast.show();
+
+      // Remove from DOM after hiding
+      toastEl.addEventListener('hidden.bs.toast', function() {
+        toastEl.remove();
+      });
+    }
+  });
+</script>
+{% endblock %}

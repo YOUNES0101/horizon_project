@@ -1,0 +1,1089 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Your Stay - Payment{% endblock %}
+
+{% block extra_css %}
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+{# Include Font Awesome for brand icons like Visa, Mastercard #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+{# Reusing consistent styles from guest_info_improved.html #}
+<style>
+  :root {
+    /* Define colors if not already defined in base.html */
+    --primary: #0d6efd; /* Example primary color */
+    --primary-rgb: 13, 110, 253;
+    --primary-dark: #0a58ca;
+    --secondary: #6c757d;
+    --success: #198754;
+    --success-rgb: 25, 135, 84;
+    --info: #0dcaf0;
+    --warning: #ffc107;
+    --warning-rgb: 255, 193, 7;
+    --danger: #dc3545;
+    --danger-rgb: 220, 53, 69;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --white: #ffffff;
+    --font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --border-radius: 0.375rem;
+    --box-shadow-sm: 0 .125rem .25rem rgba(0, 0, 0, .075);
+    --box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+  }
+
+  body {
+    font-family: var(--font-family-sans-serif);
+    background-color: var(--light);
+    color: var(--dark);
+  }
+
+  .booking-container {
+    max-width: 1140px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
+
+  .booking-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .booking-header h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.75rem;
+  }
+
+  .booking-header p {
+    color: var(--gray);
+    font-size: 1.15rem;
+    margin-bottom: 0;
+  }
+
+  /* Improved Booking Steps (Consistent) */
+  .booking-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4rem;
+    position: relative;
+    padding: 0 1rem;
+  }
+
+  .booking-steps::before {
+    content: "";
+    position: absolute;
+    top: 1.75rem;
+    left: 5%;
+    right: 5%;
+    height: 4px;
+    background-color: var(--gray-light);
+    z-index: 1;
+  }
+
+  .booking-steps-progress {
+    position: absolute;
+    top: 1.75rem;
+    left: 5%;
+    height: 4px;
+    background-color: var(--success);
+    z-index: 2;
+    transition: width 0.4s ease-in-out;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 3;
+    width: 18%;
+  }
+
+  .step-icon-wrapper {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background-color: var(--white);
+    border: 4px solid var(--gray-light);
+    color: var(--gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .step-icon-wrapper i {
+    font-size: 1.5rem;
+  }
+
+  .step.completed .step-icon-wrapper {
+    border-color: var(--success);
+    background-color: var(--success);
+    color: var(--white);
+  }
+
+  .step.active .step-icon-wrapper {
+    border-color: var(--primary);
+    background-color: var(--primary);
+    color: var(--white);
+  }
+
+  .step-label {
+    font-size: 0.9rem;
+    color: var(--gray);
+    font-weight: 500;
+  }
+
+  .step.active .step-label {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .step.completed .step-label {
+    color: var(--success);
+  }
+
+  /* Card Styling (Consistent) */
+  .booking-card {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-sm);
+    border: 1px solid var(--gray-light);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .booking-card:hover {
+    box-shadow: var(--box-shadow);
+  }
+
+  .booking-card-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-light);
+  }
+
+  .booking-card-header h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .booking-card-header p {
+    color: var(--gray);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+  }
+
+  /* Payment Method Selection */
+  .payment-methods {
+    margin-bottom: 2rem;
+  }
+
+  .payment-method {
+    display: flex;
+    align-items: center;
+    padding: 1.2rem 1rem;
+    border: 2px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .payment-method:hover {
+    border-color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.05);
+  }
+
+  .payment-method.selected {
+    border-color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.05);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.3);
+  }
+
+  .payment-method-radio {
+    margin-right: 1rem;
+    accent-color: var(--primary);
+    transform: scale(1.2);
+  }
+
+  .payment-method-icon {
+    margin-right: 1rem;
+    font-size: 1.8rem; /* Larger icons */
+    color: var(--dark);
+    width: 30px; /* Fixed width for alignment */
+    text-align: center;
+  }
+  .payment-method-icon .fa-brands {
+      vertical-align: middle;
+  }
+
+  .payment-method-logos {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-left: auto; /* Push logos to the right */
+      padding-left: 1rem;
+  }
+  .payment-method-logos i {
+      font-size: 1.6rem;
+      color: var(--gray);
+  }
+  .payment-method-logos .fa-cc-visa { color: #1A1F71; }
+  .payment-method-logos .fa-cc-mastercard { color: #EB001B; }
+  .payment-method-logos .fa-cc-amex { color: #2E77BC; }
+
+  .payment-method-details {
+    flex: 1;
+  }
+
+  .payment-method-title {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.1rem;
+  }
+
+  .payment-method-description {
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin-bottom: 0;
+  }
+
+  /* Payment Forms */
+  .payment-form-section {
+    display: none;
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    background-color: var(--light);
+  }
+
+  .payment-form-section.visible {
+    display: block;
+  }
+
+  /* Form Elements Improvements (Consistent) */
+  .form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.9rem;
+  }
+
+  .input-group-icon {
+      position: absolute;
+      left: 1rem;
+      top: calc(50% + 0.25rem);
+      transform: translateY(-50%);
+      color: var(--gray);
+      pointer-events: none;
+      z-index: 4;
+      line-height: 1;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background-color: var(--white);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .form-control.has-icon {
+      padding-left: 2.8rem;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+    outline: none;
+  }
+
+  .form-control.is-invalid {
+      border-color: var(--danger);
+  }
+  .form-control.is-invalid:focus {
+      box-shadow: 0 0 0 0.2rem rgba(var(--danger-rgb), 0.25);
+  }
+
+  .form-text {
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-top: 0.3rem;
+    display: block;
+  }
+
+  .card-row {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .card-element {
+    flex: 1;
+  }
+
+  /* Secure Payment Notice */
+  .secure-payment-notice {
+    display: flex;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: rgba(var(--success-rgb), 0.1);
+    border-radius: var(--border-radius);
+    color: var(--success);
+    border: 1px solid rgba(var(--success-rgb), 0.2);
+  }
+
+  .secure-payment-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+
+  .secure-payment-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  /* Bank Transfer Info */
+  .bank-transfer-details {
+      background-color: var(--white);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--gray-light);
+      margin-bottom: 1.5rem;
+  }
+  .bank-transfer-details .form-group {
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
+   .bank-transfer-details .form-label {
+       margin-bottom: 0;
+       flex-basis: 40%;
+       color: var(--gray);
+   }
+   .bank-transfer-details .detail-value {
+       font-weight: 500;
+       flex-basis: 60%;
+       text-align: right;
+   }
+
+  /* Summary Card (Consistent Sticky) */
+  .summary-card {
+      position: sticky;
+      top: 2rem;
+  }
+
+  .room-summary {
+    background-color: var(--light);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    border: 1px solid var(--gray-light);
+  }
+
+  .room-summary-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--gray-light);
+  }
+
+  .room-image {
+    width: 90px;
+    height: 70px;
+    border-radius: var(--border-radius);
+    object-fit: cover;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+
+  .room-details h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    color: var(--dark);
+  }
+
+  .room-type {
+    color: var(--gray);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .booking-details {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .booking-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .booking-detail-label {
+    color: var(--gray);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+  }
+  .booking-detail-label i {
+      margin-right: 0.5rem;
+      font-size: 1.1em;
+      color: var(--secondary);
+  }
+
+  .booking-detail-value {
+    font-weight: 500;
+    color: var(--dark);
+    text-align: right;
+  }
+
+  .price-summary {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed var(--gray-light);
+  }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .price-label {
+    color: var(--gray);
+  }
+
+  .price-value {
+    font-weight: 500;
+    color: var(--dark);
+  }
+
+  .price-row.total {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-light);
+  }
+
+  .price-total {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  /* Action Buttons (Consistent) */
+  .booking-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: var(--border-radius);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+  }
+
+  .btn i {
+      margin-right: 0.5rem;
+      font-size: 1.2em;
+  }
+  .btn .bx-right-arrow-alt, .btn .bx-check {
+      margin-left: 0.5rem;
+      margin-right: 0;
+  }
+
+  .btn-back {
+    background-color: transparent;
+    color: var(--gray);
+    border: 1px solid var(--gray-light);
+  }
+
+  .btn-back:hover {
+    background-color: var(--gray-light);
+    color: var(--dark);
+    border-color: var(--gray);
+  }
+
+  .btn-continue {
+    background-color: var(--primary);
+    color: var(--white);
+  }
+
+  .btn-continue:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.25);
+  }
+
+  .btn-continue:disabled {
+    background-color: var(--secondary);
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* Error Messages (Consistent) */
+  .error-message {
+    color: var(--danger);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: none; /* Hidden by default */
+    min-height: 1.2em;
+  }
+
+  .error-message.visible {
+    display: block;
+  }
+
+  /* Responsive adjustments (Consistent) */
+  @media (max-width: 992px) {
+    .summary-card {
+        position: static;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .booking-header h1 {
+        font-size: 2.2rem;
+    }
+    .booking-steps {
+        margin-bottom: 3rem;
+    }
+    .step-label {
+        font-size: 0.8rem;
+    }
+    .booking-actions {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+    .btn {
+        width: 100%;
+    }
+    .card-row {
+      flex-direction: column;
+      gap: 0;
+    }
+    .card-element {
+        margin-bottom: 1.5rem; /* Add space when stacked */
+    }
+    .card-element:last-child {
+        margin-bottom: 0;
+    }
+    .payment-method-logos {
+        display: none; /* Hide logos on small screens to save space */
+    }
+  }
+
+  @media (max-width: 576px) {
+      .booking-container {
+          margin-top: 1rem;
+      }
+      .booking-card {
+          padding: 1.5rem;
+      }
+      .payment-method {
+          padding: 1rem 0.8rem;
+      }
+      .payment-method-radio {
+          margin-right: 0.5rem;
+      }
+      .payment-method-icon {
+          margin-right: 0.5rem;
+      }
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container booking-container py-4">
+  <!-- Booking Header -->
+  <div class="booking-header">
+    <h1>Book Your Stay</h1>
+    <p>Complete your payment to secure your booking</p>
+  </div>
+
+  <!-- Booking Steps -->
+  <div class="booking-steps" id="bookingSteps">
+    <!-- Progress Bar -->
+    {# Step 4 of 5: Progress = 5% + (4-1) * (90/4)% = 5% + 3 * 22.5% = 72.5% #}
+    <div class="booking-steps-progress" id="progressBar" style="width: 72.5%;"></div>
+    <!-- Steps -->
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class='bx bx-bed'></i></div>
+      <div class="step-label">Select Room</div>
+    </div>
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class='bx bx-calendar-check'></i></div>
+      <div class="step-label">Choose Dates</div>
+    </div>
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class='bx bx-user'></i></div>
+      <div class="step-label">Guest Details</div>
+    </div>
+    <div class="step active">
+      <div class="step-icon-wrapper"><i class='bx bx-credit-card'></i></div>
+      <div class="step-label">Payment</div>
+    </div>
+    <div class="step">
+      <div class="step-icon-wrapper"><i class='bx bx-check-double'></i></div>
+      <div class="step-label">Confirmation</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 mb-4 mb-lg-0">
+      <!-- Payment Card -->
+      <div class="booking-card">
+        <div class="booking-card-header">
+          <h2>Payment Method</h2>
+          <p>Choose your preferred payment option below.</p>
+        </div>
+
+        {# Pass all necessary data from guest info step #}
+        <form id="paymentForm" method="post" action="{% url 'bookings:confirmation' %}" novalidate>
+          {% csrf_token %}
+
+          <!-- Hidden fields from previous steps -->
+          <input type="hidden" name="room_id" value="{{ room.id }}">
+          <input type="hidden" name="check_in_date" value="{{ check_in_date }}">
+          <input type="hidden" name="check_out_date" value="{{ check_out_date }}">
+          <input type="hidden" name="num_guests" value="{{ num_guests }}">
+          <input type="hidden" name="guest_name" value="{{ guest_name }}">
+          <input type="hidden" name="guest_email" value="{{ guest_email }}">
+          <input type="hidden" name="guest_phone" value="{{ guest_phone }}">
+          <input type="hidden" name="guest_country" value="{{ guest_country }}">
+          <input type="hidden" name="special_requests" value="{{ special_requests }}">
+          <input type="hidden" name="total_price" value="{{ total_price }}">
+          <input type="hidden" name="nights" value="{{ nights }}">
+          <input type="hidden" name="subtotal" value="{{ subtotal }}">
+          <input type="hidden" name="taxes_fees" value="{{ taxes_fees }}">
+
+          <div class="payment-methods">
+            {# Credit Card Option #}
+            <label class="payment-method selected" for="payment_method_card" data-method="credit_card">
+              <input type="radio" id="payment_method_card" name="payment_method" value="credit_card" class="payment-method-radio" checked>
+              <div class="payment-method-icon">
+                <i class="bx bx-credit-card"></i>
+              </div>
+              <div class="payment-method-details">
+                <div class="payment-method-title">Credit or Debit Card</div>
+                <div class="payment-method-description">Pay securely with Visa, Mastercard, AMEX</div>
+              </div>
+              <div class="payment-method-logos">
+                  <i class="fab fa-cc-visa"></i>
+                  <i class="fab fa-cc-mastercard"></i>
+                  <i class="fab fa-cc-amex"></i>
+              </div>
+            </label>
+
+            {# PayPal Option #}
+            <label class="payment-method" for="payment_method_paypal" data-method="paypal">
+              <input type="radio" id="payment_method_paypal" name="payment_method" value="paypal" class="payment-method-radio">
+              <div class="payment-method-icon">
+                <i class="bx bxl-paypal" style="color: #00457C;"></i>
+              </div>
+              <div class="payment-method-details">
+                <div class="payment-method-title">PayPal</div>
+                <div class="payment-method-description">Pay securely using your PayPal account</div>
+              </div>
+               <div class="payment-method-logos">
+                  <i class="fab fa-paypal" style="color: #00457C;"></i>
+              </div>
+            </label>
+
+            {# Bank Transfer Option #}
+            <label class="payment-method" for="payment_method_bank" data-method="bank_transfer">
+              <input type="radio" id="payment_method_bank" name="payment_method" value="bank_transfer" class="payment-method-radio">
+              <div class="payment-method-icon">
+                <i class="bx bx-bank"></i>
+              </div>
+              <div class="payment-method-details">
+                <div class="payment-method-title">Bank Transfer</div>
+                <div class="payment-method-description">Instructions provided after booking</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Credit Card Form Section -->
+          <div class="payment-form-section visible" id="credit_card_form">
+            <h3 class="mb-3">Enter Card Details</h3>
+            <div class="form-group">
+              <label for="card_name" class="form-label">Cardholder Name</label>
+              <input type="text" id="card_name" name="card_name" class="form-control" placeholder="Name as it appears on card" required>
+              <div class="error-message" id="card_name_error"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="card_number" class="form-label">Card Number</label>
+              <div style="position: relative;">
+                  <input type="text" id="card_number" name="card_number" class="form-control" placeholder="•••• •••• •••• ••••" required inputmode="numeric">
+                  <i class="bx bx-credit-card input-group-icon" style="left: auto; right: 1rem; top: 50%; transform: translateY(-50%);"></i>
+              </div>
+              <div class="error-message" id="card_number_error"></div>
+            </div>
+
+            <div class="card-row">
+              <div class="card-element form-group mb-md-0">
+                <label for="expiry_date" class="form-label">Expiry Date</label>
+                <input type="text" id="expiry_date" name="expiry_date" class="form-control" placeholder="MM / YY" required inputmode="numeric">
+                <div class="error-message" id="expiry_date_error"></div>
+              </div>
+
+              <div class="card-element form-group mb-0">
+                <label for="cvv" class="form-label">CVV</label>
+                <input type="text" id="cvv" name="cvv" class="form-control" placeholder="•••" required inputmode="numeric" maxlength="4">
+                <div class="form-text">3 or 4 digit code</div>
+                <div class="error-message" id="cvv_error"></div>
+              </div>
+            </div>
+
+            <div class="secure-payment-notice">
+              <div class="secure-payment-icon"><i class="bx bx-lock-alt"></i></div>
+              <div class="secure-payment-text">Your payment information is encrypted and secure.</div>
+            </div>
+          </div>
+
+          <!-- PayPal Form Section -->
+          <div class="payment-form-section" id="paypal_form">
+            <p class="mb-3">You will be redirected to PayPal to complete your payment securely after clicking the button below.</p>
+            <div class="secure-payment-notice">
+              <div class="secure-payment-icon"><i class="bx bxl-paypal"></i></div>
+              <div class="secure-payment-text">Proceed to PayPal for secure payment.</div>
+            </div>
+          </div>
+
+          <!-- Bank Transfer Form Section -->
+          <div class="payment-form-section" id="bank_transfer_form">
+            <p class="mb-3">To complete your booking, please make a bank transfer using the details below. Your booking will be confirmed upon receipt of payment.</p>
+            <div class="bank-transfer-details">
+                <div class="form-group">
+                  <label class="form-label">Bank Name:</label>
+                  <div class="detail-value">HORIZONH Bank International</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Account Name:</label>
+                  <div class="detail-value">HORIZONH Hotel Group Ltd</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Account Number:</label>
+                  <div class="detail-value">123-456789-001</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">SWIFT/BIC:</label>
+                  <div class="detail-value">HORIZONHXX</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Reference:</label>
+                  {# Generate or pass a unique booking ref #}
+                  <div class="detail-value">BOOK-{{ booking_reference|default:"REF12345" }}</div>
+                </div>
+            </div>
+            <div class="secure-payment-notice" style="background-color: rgba(var(--warning-rgb), 0.1); color: var(--warning); border-color: rgba(var(--warning-rgb), 0.2);">
+              <div class="secure-payment-icon"><i class="bx bx-info-circle"></i></div>
+              <div class="secure-payment-text">Please include the reference number. Your booking is held for 48 hours.</div>
+            </div>
+          </div>
+
+          <div class="booking-actions">
+            {# Link back to the guest info page, passing necessary context if possible #}
+            <a href="{% url 'bookings:guest_info' %}?room_id={{ room.id }}&check_in_date={{ check_in_date }}&check_out_date={{ check_out_date }}&num_guests={{ num_guests }}&total_price={{ total_price }}" class="btn btn-back">
+              <i class='bx bx-arrow-back'></i> Back to Guest Details
+            </a>
+            <button type="submit" class="btn btn-continue" id="completeBookingBtn">
+              {# Button text changes based on payment method #}
+              <span id="paymentBtnText">Complete Booking</span> <i class="bx bx-check"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Booking Summary Card -->
+      <div class="booking-card summary-card">
+        <div class="booking-card-header">
+          <h2>Booking Summary</h2>
+          <p>Review your stay details</p>
+        </div>
+
+        <div class="room-summary">
+          <div class="room-summary-header">
+            <img src="{{ room.get_image_url }}" alt="{{ room.number }}" class="room-image" />
+            <div class="room-details">
+              <h3>Room {{ room.number }}</h3>
+              <div class="room-type">{{ room.get_room_type_display }}</div>
+            </div>
+          </div>
+
+          <div class="booking-details">
+            <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-calendar-check'></i> Check-in:</span>
+              <span class="booking-detail-value">{{ check_in_date|date:"D, M d, Y" }}</span>
+            </div>
+            <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-calendar-x'></i> Check-out:</span>
+              <span class="booking-detail-value">{{ check_out_date|date:"D, M d, Y" }}</span>
+            </div>
+             <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-moon'></i> Duration:</span>
+              <span class="booking-detail-value">{{ nights }} night{{ nights|pluralize }}</span>
+            </div>
+            <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-group'></i> Guests:</span>
+              <span class="booking-detail-value">{{ num_guests }} guest{{ num_guests|pluralize }}</span>
+            </div>
+             <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-user-circle'></i> Guest:</span>
+              <span class="booking-detail-value">{{ guest_name }}</span>
+            </div>
+          </div>
+
+          <div class="price-summary">
+            <div class="price-row">
+              <span class="price-label">Rate ({{ nights }} night{{ nights|pluralize }}):</span>
+              <span class="price-value">${{ subtotal|floatformat:2 }}</span>
+            </div>
+            <div class="price-row">
+              <span class="price-label">Taxes & Fees (Est.):</span>
+              <span class="price-value">${{ taxes_fees|floatformat:2 }}</span>
+            </div>
+            <div class="price-row total">
+              <span class="price-label price-total">Total Due:</span>
+              <span class="price-value price-total">${{ total_price|floatformat:2 }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/imask/6.4.3/imask.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethods = document.querySelectorAll('.payment-method');
+    const paymentFormSections = document.querySelectorAll('.payment-form-section');
+    const paymentForm = document.getElementById('paymentForm');
+    const completeBookingBtn = document.getElementById('completeBookingBtn');
+    const paymentBtnText = document.getElementById('paymentBtnText');
+
+    // --- Payment Method Selection Logic ---
+    paymentMethods.forEach(method => {
+      method.addEventListener('click', function() {
+        // Update selected state
+        paymentMethods.forEach(m => m.classList.remove('selected'));
+        this.classList.add('selected');
+        this.querySelector('.payment-method-radio').checked = true;
+
+        const selectedMethod = this.dataset.method;
+
+        // Show/hide corresponding form section
+        paymentFormSections.forEach(section => {
+          if (section.id === selectedMethod + '_form') {
+            section.classList.add('visible');
+          } else {
+            section.classList.remove('visible');
+          }
+        });
+
+        // Update button text and required fields
+        updateFormRequirements(selectedMethod);
+      });
+    });
+
+    function updateFormRequirements(method) {
+        // Disable all payment form inputs first
+        paymentFormSections.forEach(section => {
+            section.querySelectorAll('input, select, textarea').forEach(input => {
+                input.required = false;
+                input.disabled = true; // Disable to prevent submission if hidden
+            });
+        });
+
+        // Enable inputs for the selected section
+        const activeSection = document.getElementById(method + '_form');
+        if (activeSection) {
+            activeSection.querySelectorAll('input, select, textarea').forEach(input => {
+                // Only set required if it originally had the attribute
+                if (input.hasAttribute('data-original-required')) {
+                    input.required = true;
+                }
+                input.disabled = false;
+            });
+        }
+
+        // Update button text
+        if (method === 'paypal') {
+            paymentBtnText.textContent = 'Proceed to PayPal';
+        } else if (method === 'bank_transfer') {
+            paymentBtnText.textContent = 'Confirm Booking (Pay Later)';
+        } else {
+            paymentBtnText.textContent = 'Complete Booking';
+        }
+    }
+
+    // Store original required state and initialize
+    paymentForm.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+        input.setAttribute('data-original-required', 'true');
+    });
+    updateFormRequirements('credit_card'); // Initialize for default selection
+
+    // --- Input Masking (using iMask) ---
+    const cardNumberInput = document.getElementById('card_number');
+    const expiryDateInput = document.getElementById('expiry_date');
+    const cvvInput = document.getElementById('cvv');
+
+    if (cardNumberInput) {
+        IMask(cardNumberInput, {
+            mask: '0000 0000 0000 0000'
+        });
+    }
+    if (expiryDateInput) {
+        IMask(expiryDateInput, {
+            mask: 'MM / YY',
+            blocks: {
+                MM: { mask: IMask.MaskedRange, from: 1, to: 12, maxLength: 2, autofix: true },
+                YY: { mask: IMask.MaskedRange, from: String(new Date().getFullYear()).slice(-2), to: String(new Date().getFullYear() + 10).slice(-2), maxLength: 2, autofix: true }
+            },
+            lazy: false
+        });
+    }
+    if (cvvInput) {
+        IMask(cvvInput, {
+            mask: '000[0]'
+        });
+    }
+
+    // --- Basic Form Validation ---
+    paymentForm.addEventListener('submit', function(e) {
+        let isFormValid = true;
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        const activeSection = document.getElementById(selectedMethod + '_form');
+
+        if (activeSection) {
+            activeSection.querySelectorAll('input[required]').forEach(input => {
+                if (!validateInput(input)) {
+                    isFormValid = false;
+                }
+            });
+        }
+
+        if (!isFormValid) {
+            e.preventDefault();
+            console.log("Payment form submission prevented due to validation errors.");
+            const firstInvalid = activeSection.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.focus();
+            }
+        }
+        // Add more robust validation (e.g., Luhn check for card number) if needed
+    });
+
+    function validateInput(input) {
+        clearError(input);
+        let isValid = true;
+        const value = input.value.trim();
+        const errorElementId = input.id + '_error';
+        const errorElement = document.getElementById(errorElementId);
+
+        if (input.required && !value) {
+            showError(input, errorElement, "This field is required.");
+            isValid = false;
+        } else if (input.id === 'card_number' && value && value.replace(/\s/g, '').length < 15) {
+            showError(input, errorElement, "Please enter a valid card number.");
+            isValid = false;
+        } else if (input.id === 'expiry_date' && value && value.length < 7) {
+            showError(input, errorElement, "Please enter a valid expiry date (MM / YY).");
+            isValid = false;
+        } else if (input.id === 'cvv' && value && value.length < 3) {
+            showError(input, errorElement, "Please enter a valid CVV.");
+            isValid = false;
+        }
+
+        if (isValid) {
+            input.classList.remove('is-invalid');
+        } else {
+            input.classList.add('is-invalid');
+        }
+        return isValid;
+    }
+
+    function showError(input, errorElement, message) {
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.classList.add('visible');
+        }
+        input.classList.add('is-invalid');
+    }
+
+    function clearError(input) {
+        const errorElementId = input.id + '_error';
+        const errorElement = document.getElementById(errorElementId);
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.classList.remove('visible');
+        }
+        input.classList.remove('is-invalid');
+    }
+
+    // Add blur/input listeners for real-time feedback
+    const requiredInputs = paymentForm.querySelectorAll('input[required]');
+    requiredInputs.forEach(input => {
+        input.addEventListener('blur', () => validateInput(input));
+        input.addEventListener('input', () => clearError(input));
+    });
+
+    // Update progress bar based on current step (Step 4 of 5)
+    const progressBar = document.getElementById('progressBar');
+    const currentStep = 4;
+    const totalSteps = 5;
+    const progressPercentage = 5 + (currentStep - 1) * (90 / (totalSteps - 1));
+    if (progressBar) {
+        progressBar.style.width = `${progressPercentage}%`;
+    }
+
+  });
+</script>
+{% endblock %}
+

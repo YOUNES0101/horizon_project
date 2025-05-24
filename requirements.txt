@@ -1,0 +1,10 @@
+Django>=4.2.0
+Pillow>=10.0.0  # For image handling
+python-dotenv==1.0.0
+django-crispy-forms>=2.0  # For better form rendering
+crispy-bootstrap5>=0.7  # Bootstrap 5 template pack for crispy-forms
+django-allauth>=0.54.0  # For user authentication
+django-environ>=0.10.0  # For environment variable management
+mysqlclient>=2.2.0  # MySQL database adapter
+gunicorn>=20.1.0
+whitenoise>=6.5.0

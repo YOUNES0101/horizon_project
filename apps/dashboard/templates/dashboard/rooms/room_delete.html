@@ -1,0 +1,326 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% load template_filter %}
+
+{% block title %}Delete Room - HORIZONH{% endblock %}
+{% block header_title %}Delete Room{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Delete Room Specific Styles */
+  .delete-card {
+    border: none;
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+  }
+
+  .delete-card:hover {
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .delete-warning {
+    background-color: rgba(var(--danger-rgb, 181, 68, 75), 0.08);
+    border-left: 4px solid var(--danger);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+  }
+
+  .delete-warning-icon {
+    font-size: 2.5rem;
+    color: var(--danger);
+    margin-bottom: 1rem;
+  }
+
+  .delete-warning-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--danger);
+  }
+
+  .delete-warning-text {
+    color: var(--dark);
+    margin-bottom: 0;
+  }
+
+  /* Room Info Styles */
+  .room-info {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    background-color: var(--gray-light);
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+  }
+
+  .room-image {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--border-radius);
+    object-fit: cover;
+    margin-right: 1.5rem;
+    border: 3px solid white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .room-details h4 {
+    margin-bottom: 0.5rem;
+    font-family: var(--font-heading);
+    color: var(--dark);
+  }
+
+  .room-type {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+
+  .room-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .room-meta-item {
+    display: flex;
+    align-items: center;
+    color: var(--gray-dark);
+    font-size: 0.9rem;
+  }
+
+  .room-meta-item i {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  /* Form Actions */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  /* Animation Classes */
+  .animate-pop-in {
+    animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  @keyframes popIn {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+      <h1 class="h3 mb-0 text-gray-800 font-weight-bold animate-pop-in">Delete Room</h1>
+      <p class="mb-0 text-muted animate-pop-in delay-1">Permanently remove room from inventory</p>
+    </div>
+    <div class="col-md-6 text-md-end animate-pop-in delay-2">
+      <a href="{% url 'dashboard:room_list' %}" class="btn btn-outline-secondary">
+        <i class="bx bx-arrow-back me-1"></i> Back to Rooms
+      </a>
+    </div>
+  </div>
+
+  <!-- Delete Room Form -->
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card delete-card mb-4 animate-pop-in delay-3">
+        <div class="card-body">
+          <!-- Warning Message -->
+          <div class="delete-warning">
+            <div class="delete-warning-icon">
+              <i class="bx bx-error-circle"></i>
+            </div>
+            <h5 class="delete-warning-title">Warning: This action cannot be undone</h5>
+            <p class="delete-warning-text">
+              You are about to permanently delete this room from the system. This will remove all room data, including images and any associated booking history. This action cannot be reversed.
+            </p>
+          </div>
+
+          <!-- Room Information -->
+          <div class="room-info animate-pop-in delay-4">
+            <img src="{{ room.get_image_url }}" alt="Room {{ room.number }}" class="room-image">
+            <div class="room-details">
+              <h4>Room {{ room.number }}</h4>
+              <div class="room-type">{{ room.get_room_type_display }}</div>
+              <div class="room-meta">
+                <div class="room-meta-item">
+                  <i class="bx bx-building-house"></i>
+                  <span>Floor {{ room.floor }}</span>
+                </div>
+                <div class="room-meta-item">
+                  <i class="bx bx-check-circle"></i>
+                  <span>{{ room.is_available|yesno:"Available,Unavailable" }}</span>
+                </div>
+                <div class="room-meta-item">
+                  <i class="bx bx-calendar"></i>
+                  <span>Created {{ room.created_at|date:"M d, Y" }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirmation Form -->
+          <form method="post" id="deleteForm">
+            {% csrf_token %}
+
+            <div class="mb-4 animate-pop-in delay-5">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                <label class="form-check-label" for="confirmDelete">
+                  I understand that this action cannot be undone and all data associated with Room {{ room.number }} will be permanently deleted.
+                </label>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <a href="{% url 'dashboard:room_list' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-x me-1"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                <i class="bx bx-trash me-1"></i> Delete Room</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Confirmation checkbox
+    const confirmCheckbox = document.getElementById('confirmDelete');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    confirmCheckbox.addEventListener('change', function() {
+      deleteBtn.disabled = !this.checked;
+    });
+
+    // Delete form submission
+    const deleteForm = document.getElementById('deleteForm');
+
+    deleteForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Double-check confirmation
+      if (!confirmCheckbox.checked) {
+        showToast('Error', 'Please confirm that you understand the consequences of this action.', 'danger');
+        return;
+      }
+
+      // Disable delete button to prevent multiple submissions
+      deleteBtn.disabled = true;
+      deleteBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-1"></i> Deleting...';
+
+      // Submit form
+      fetch('/dashboard/rooms/{{ room.id }}/delete/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Show success message
+          showToast('Success', 'Room deleted successfully!', 'success');
+
+          // Redirect to room list after a short delay
+          setTimeout(() => {
+            window.location.href = '/dashboard/rooms/';
+          }, 1500);
+        } else {
+          // Show error message
+          showToast('Error', data.message || 'Failed to delete room. Please try again.', 'danger');
+
+          // Re-enable delete button
+          deleteBtn.disabled = false;
+          deleteBtn.innerHTML = '<i class="bx bx-trash me-1"></i> Delete Room';
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Error', 'An error occurred while deleting the room.', 'danger');
+
+        // Re-enable delete button
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = '<i class="bx bx-trash me-1"></i> Delete Room';
+      });
+    });
+
+    // Toast notification function
+    function showToast(title, message, type) {
+      // Create toast container if it doesn't exist
+      let toastContainer = document.querySelector('.toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+      }
+
+      // Create toast element
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+
+      // Toast content
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <strong>${title}</strong>: ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+
+      // Add to container
+      toastContainer.appendChild(toastEl);
+
+      // Initialize and show toast
+      const toast = new bootstrap.Toast(toastEl, {
+        autohide: true,
+        delay: 5000
+      });
+      toast.show();
+
+      // Remove from DOM after hiding
+      toastEl.addEventListener('hidden.bs.toast', function() {
+        toastEl.remove();
+      });
+    }
+  });
+</script>
+{% endblock %}

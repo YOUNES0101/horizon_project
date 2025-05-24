@@ -1,0 +1,318 @@
+{% extends "dashboard/base.html" %} {% comment %} Adjust path if base.html is elsewhere {% endcomment %}
+{% load static %}
+{% load template_filter %}
+{% load dashboard_filters %}
+{% comment %} Assuming you have custom filters like get_item {% endcomment %}
+
+{% block title %}Booking Management - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Custom styles for filter sidebar */
+  .filter-sidebar .card-body {
+    padding: 1.5rem;
+  }
+  .filter-sidebar .filter-group {
+    margin-bottom: 1.5rem;
+  }
+  .filter-sidebar .filter-group-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+    color: var(--dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .filter-sidebar .form-check {
+    margin-bottom: 0.6rem;
+  }
+  .filter-sidebar .form-check-label {
+    font-size: 0.9rem;
+    color: var(--secondary);
+  }
+  .filter-sidebar .form-control,
+  .filter-sidebar .form-select {
+      font-size: 0.9rem;
+      margin-bottom: 1rem; /* Add space below inputs/selects */
+  }
+  .filter-sidebar .btn-reset {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: var(--primary);
+  }
+  .filter-sidebar .btn-reset:hover {
+      text-decoration: underline;
+  }
+  .filter-sidebar .btn-primary {
+      width: 100%;
+      margin-top: 1rem;
+  }
+  .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+  }
+  .results-header h5 {
+      margin-bottom: 0;
+  }
+  .results-header .sort-select {
+      max-width: 200px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="page-title">Booking Management</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb ms-1">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard_home' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Bookings</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-auto">
+                    {% comment %} Optional: Add button if needed {% endcomment %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Filter Sidebar -->
+            <div class="col-lg-3">
+                <div class="card filter-sidebar mb-4">
+                    <div class="card-body">
+                        <form method="get" action="{% url 'dashboard:booking_list' %}" id="filterForm">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0"><i class="bx bx-filter-alt me-1"></i>Filter Bookings</h5>
+                                <a href="{% url 'dashboard:booking_list' %}" class="btn-reset">Reset All</a>
+                            </div>
+
+                            <!-- Search -->
+                            <div class="filter-group">
+                                <label for="searchQuery" class="form-label filter-group-title">Search</label>
+                                <input type="text" class="form-control form-control-sm" id="searchQuery" name="q" placeholder="Guest, Email, Room#, Booking#" value="{{ current_filters.search|default:'' }}">
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div class="filter-group">
+                                <div class="filter-group-title">
+                                    <span>Status</span>
+                                    {% if current_filters.status %}<a href="{{ request.path }}?{{ request.get_full_path|remove_param:"status" }}" class="btn-reset">Reset</a>{% endif %}
+                                </div>
+                                {% for key, value in booking_statuses %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="status" value="{{ key }}" id="status_{{ key }}" {% if key in current_filters.status %}checked{% endif %}>
+                                    <label class="form-check-label" for="status_{{ key }}">
+                                        {{ value }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Room Type Filter -->
+                            <div class="filter-group">
+                                <div class="filter-group-title">
+                                    <span>Room Type</span>
+                                    {% if current_filters.room_type %}<a href="{{ request.path }}?{{ request.get_full_path|remove_param:"room_type" }}" class="btn-reset">Reset</a>{% endif %}
+                                </div>
+                                {% for key, value in room_types %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="room_type" value="{{ key }}" id="room_type_{{ key }}" {% if key in current_filters.room_type %}checked{% endif %}>
+                                    <label class="form-check-label" for="room_type_{{ key }}">
+                                        {{ value }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Date Filter -->
+                            <div class="filter-group">
+                                <div class="filter-group-title">
+                                    <span>Date Range</span>
+                                    {% if current_filters.date_filter %}<a href="{{ request.path }}?{{ request.get_full_path|remove_param:"date_filter" }}" class="btn-reset">Reset</a>{% endif %}
+                                </div>
+                                <select class="form-select form-select-sm" id="dateFilter" name="date_filter">
+                                    <option value="" {% if not current_filters.date_filter %}selected{% endif %}>All Dates</option>
+                                    <option value="upcoming" {% if current_filters.date_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                                    <option value="active_today" {% if current_filters.date_filter == 'active_today' %}selected{% endif %}>Active Today</option>
+                                    <option value="past" {% if current_filters.date_filter == 'past' %}selected{% endif %}>Past</option>
+                                </select>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking List Content -->
+            <div class="col-lg-9">
+                <div class="results-header">
+                    <h5>{{ bookings.paginator.count }} Booking{{ bookings.paginator.count|pluralize }} Found</h5>
+                    <form method="get" action="{% url 'dashboard:booking_list' %}" class="d-flex align-items-center">
+                        {% for key, value_list in request.GET.lists %}
+                            {% if key != 'sort' and key != 'page' %}
+                                {% for value in value_list %}
+                                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                        <select class="form-select form-select-sm sort-select me-2" id="sortOption" name="sort" onchange="this.form.submit()">
+                            <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Sort: Newest Booked</option>
+                            <option value="created_at" {% if current_sort == 'created_at' %}selected{% endif %}>Sort: Oldest Booked</option>
+                            <option value="check_in_date" {% if current_sort == 'check_in_date' %}selected{% endif %}>Sort: Check-in (Asc)</option>
+                            <option value="-check_in_date" {% if current_sort == '-check_in_date' %}selected{% endif %}>Sort: Check-in (Desc)</option>
+                            <option value="guest_name" {% if current_sort == 'guest_name' %}selected{% endif %}>Sort: Guest Name (A-Z)</option>
+                            <option value="-guest_name" {% if current_sort == '-guest_name' %}selected{% endif %}>Sort: Guest Name (Z-A)</option>
+                            <option value="room__number" {% if current_sort == 'room__number' %}selected{% endif %}>Sort: Room Number (Asc)</option>
+                            <option value="-room__number" {% if current_sort == '-room__number' %}selected{% endif %}>Sort: Room Number (Desc)</option>
+                            <option value="status" {% if current_sort == 'status' %}selected{% endif %}>Sort: Status</option>
+                        </select>
+                        {% comment %} Optional: Add view toggle buttons if needed later {% endcomment %}
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-nowrap mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" style="width: 12%;">Booking #</th>
+                                        <th scope="col">Guest</th>
+                                        <th scope="col">Room</th>
+                                        <th scope="col">Check-in</th>
+                                        <th scope="col">Check-out</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Price</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'dashboard:booking_detail' booking.pk %}" class="fw-medium text-primary">{{ booking.booking_number }}</a>
+                                            <small class="d-block text-muted">{{ booking.duration }} day{{ booking.duration|pluralize }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="fw-medium">{{ booking.guest_name }}</div>
+                                            <small class="text-muted">{{ booking.guest_email }}</small>
+                                        </td>
+                                        <td>
+                                            Room {{ booking.room.number }}
+                                            <small class="d-block text-muted">{{ booking.room.get_room_type_display }}</small>
+                                        </td>
+                                        <td>{{ booking.check_in_date|date:"M d, Y" }}</td>
+                                        <td>{{ booking.check_out_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge rounded-pill bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% elif booking.status == 'completed' %}secondary{% else %}info{% endif %}-light text-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% elif booking.status == 'completed' %}secondary{% else %}info{% endif %}">
+                                                {{ booking.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>${{ booking.total_price|floatformat:2 }}</td>
+                                        <td>
+                                            <a href="{% url 'dashboard:booking_detail' booking.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="View Details">
+                                                <i class="bx bx-show"></i>
+                                            </a>
+                                            {% if booking.status == 'confirmed' or booking.status == 'pending' %}
+                                            <a href="{% url 'dashboard:booking_cancel' booking.pk %}" class="btn btn-sm btn-outline-danger" title="Cancel Booking">
+                                                <i class="bx bx-x-circle"></i>
+                                            </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5">
+                                            <i class="bx bx-info-circle fs-3 text-muted mb-2"></i>
+                                            <p class="mb-0 text-muted">No bookings found matching your criteria.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if bookings.has_other_pages %}
+                    <div class="card-footer bg-white py-3">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if bookings.has_previous %}{{ request.get_full_path|remove_param:"param_name" }}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{{ request.get_full_path|remove_param:"param_name" }}" aria-label="First">
+                                            <span aria-hidden="true">&laquo;&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ bookings.previous_page_number }}{{ request.get_full_path|remove_param:"param_name" }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">&laquo;&laquo;</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                {% endif %}
+
+                                {% for i in bookings.paginator.page_range %}
+                                    {% if bookings.number == i %}
+                                        <li class="page-item active" aria-current="page"><span class="page-link">{{ i }}</span></li>
+                                    {% elif i > bookings.number|add:'-3' and i < bookings.number|add:'3' %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ i }}{{ request.get_full_path|remove_param:"param_name" }}">{{ i }}</a></li>
+                                    {% elif i == bookings.number|add:'-3' or i == bookings.number|add:'3' %}
+                                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if bookings.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ bookings.next_page_number }}{{ request.get_full_path|remove_param:"param_name" }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ bookings.paginator.num_pages }}{{ request.get_full_path|remove_param:"param_name" }}" aria-label="Last">
+                                            <span aria-hidden="true">&raquo;&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                    <li class="page-item disabled"><span class="page-link">&raquo;&raquo;</span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% comment %} Modal is no longer needed for cancellation {% endcomment %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Optional: Add JS for filter interactions if needed, e.g., auto-submit on change
+// document.querySelectorAll('.filter-sidebar input, .filter-sidebar select').forEach(el => {
+//     el.addEventListener('change', () => {
+//         document.getElementById('filterForm').submit();
+//     });
+// });
+</script>
+{% endblock %}
+

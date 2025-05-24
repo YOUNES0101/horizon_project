@@ -1,0 +1,267 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% load template_filter %}
+
+{% block title %}Edit Room{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-dark">Edit Room</h5>
+                        </div>
+                        <div class="col text-end">
+                            <a href="{% url 'dashboard:room_list' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bx bx-arrow-back me-1"></i> Back to Rooms
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="roomEditForm" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Room Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="room_number" class="form-label">Room Number <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="room_number" name="number" value="{{ room.number }}" required>
+                                            <div class="invalid-feedback">Please enter a room number.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="room_type" class="form-label">Room Type <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="room_type" name="room_type" required>
+                                                <option value="" disabled>Select room type</option>
+                                                {% for type_key, type_name in room_types %}
+                                                <option value="{{ type_key }}" {% if room.room_type == type_key %}selected{% endif %}>{{ type_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">Please select a room type.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="floor" class="form-label">Floor <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="floor" name="floor" min="1" value="{{ room.floor }}" required>
+                                            <div class="invalid-feedback">Please enter a valid floor number.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="price" class="form-label">Price (per night) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="{{ room.price }}" required>
+                                                <div class="invalid-feedback">Please enter a valid price.</div>
+                                            </div>
+                                            <small class="text-muted">Enter the price per night in USD</small>
+                                        </div>
+
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="is_available" name="is_available" {% if room.is_available %}checked{% endif %}>
+                                            <label class="form-check-label" for="is_available">Available for booking</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Room Image</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="image-upload-container mb-3">
+                                            <div class="image-preview-container text-center p-3 border rounded" id="imagePreviewContainer">
+                                                {% if room.image %}
+                                                <img src="{{ room.get_image_url }}" alt="Room Preview" id="imagePreview" class="img-fluid mb-2" style="max-height: 200px; width: auto;">
+                                                <p class="text-muted mb-0" id="dragDropText">Current image: {{ room.image.name|default:"room image" }}</p>
+                                                {% else %}
+                                                <img src="{% static 'images/1.png' %}" alt="Room Preview" id="imagePreview" class="img-fluid mb-2" style="max-height: 200px; width: auto;">
+                                                <p class="text-muted mb-0" id="dragDropText">Drag & drop an image here or click to browse</p>
+                                                {% endif %}
+                                            </div>
+                                            <input type="file" class="form-control d-none" id="room_image" name="image" accept="image/*">
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-outline-primary flex-grow-1" id="browseImageBtn">
+                                                <i class="bx bx-image-add me-1"></i> Browse Image
+                                            </button>
+                                            {% if room.image %}
+                                            <button type="button" class="btn btn-outline-danger" id="clearImageBtn">
+                                                <i class="bx bx-trash me-1"></i> Clear
+                                            </button>
+                                            <input type="hidden" name="clear_image" id="clearImageInput" value="false">
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Room Amenities</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">Select the amenities available in this room:</p>
+
+                                <div class="row">
+                                    {% for amenity_key, amenity_name in amenities %}
+                                    <div class="col-md-4 col-sm-6 mb-3">
+                                        <div class="form-check custom-amenity-check">
+                                            <input class="form-check-input" type="checkbox" id="amenity_{{ amenity_key }}" name="amenities" value="{{ amenity_key }}"
+                                                {% if amenity_key in room.amenities %}checked{% endif %}>
+                                            <label class="form-check-label d-flex align-items-center" for="amenity_{{ amenity_key }}">
+                                                <i class="bx {{ amenity_icons|get_item:amenity_key }} me-2"></i>
+                                                {{ amenity_name }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary me-2" onclick="window.location.href='{% url 'dashboard:room_list' %}'">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bx bx-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.getElementById('roomEditForm');
+
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            form.classList.add('was-validated');
+        });
+
+        // Image upload preview
+        const imageInput = document.getElementById('room_image');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const dragDropText = document.getElementById('dragDropText');
+        const browseImageBtn = document.getElementById('browseImageBtn');
+
+        browseImageBtn.addEventListener('click', function() {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    dragDropText.textContent = this.files[0].name;
+
+                    // If there's a clear button and clear input, update them
+                    const clearImageInput = document.getElementById('clearImageInput');
+                    if (clearImageInput) {
+                        clearImageInput.value = "false";
+                    }
+                }.bind(this);
+
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        // Drag and drop functionality
+        imagePreviewContainer.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            imagePreviewContainer.classList.add('border-primary');
+        });
+
+        imagePreviewContainer.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            imagePreviewContainer.classList.remove('border-primary');
+        });
+
+        imagePreviewContainer.addEventListener('drop', function(e) {
+            e.preventDefault();
+            imagePreviewContainer.classList.remove('border-primary');
+
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                imageInput.files = e.dataTransfer.files;
+
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    dragDropText.textContent = imageInput.files[0].name;
+
+                    // If there's a clear button and clear input, update them
+                    const clearImageInput = document.getElementById('clearImageInput');
+                    if (clearImageInput) {
+                        clearImageInput.value = "false";
+                    }
+                };
+
+                reader.readAsDataURL(e.dataTransfer.files[0]);
+            }
+        });
+
+        imagePreviewContainer.addEventListener('click', function() {
+            imageInput.click();
+        });
+
+        // Clear image functionality
+        const clearImageBtn = document.getElementById('clearImageBtn');
+        const clearImageInput = document.getElementById('clearImageInput');
+
+        if (clearImageBtn && clearImageInput) {
+            clearImageBtn.addEventListener('click', function() {
+                imagePreview.src = "{% static 'images/default_room_image.jpg' %}";
+                dragDropText.textContent = "Image will be removed";
+                imageInput.value = "";
+                clearImageInput.value = "true";
+            });
+        }
+
+        // Price input formatting
+        const priceInput = document.getElementById('price');
+
+        priceInput.addEventListener('input', function() {
+            // Ensure only numbers and decimal point
+            this.value = this.value.replace(/[^0-9.]/g, '');
+
+            // Ensure only one decimal point
+            const parts = this.value.split('.');
+            if (parts.length > 2) {
+                this.value = parts[0] + '.' + parts.slice(1).join('');
+            }
+
+            // Limit to 2 decimal places
+            if (parts.length > 1 && parts[1].length > 2) {
+                this.value = parts[0] + '.' + parts[1].substring(0, 2);
+            }
+        });
+    });
+</script>
+{% endblock %}

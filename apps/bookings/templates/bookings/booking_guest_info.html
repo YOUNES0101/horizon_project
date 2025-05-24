@@ -1,0 +1,769 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Your Stay - Guest Information{% endblock %}
+
+{% block extra_css %}
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+{# Assuming the base styles from booking_date_selection_fixed.html are either in base.html or need to be included #}
+{# Re-adding relevant styles here for clarity, assuming they might not be in base.html #}
+<style>
+  :root {
+    /* Define colors if not already defined in base.html */
+    --primary: #0d6efd; /* Example primary color */
+    --primary-rgb: 13, 110, 253;
+    --primary-dark: #0a58ca;
+    --secondary: #6c757d;
+    --success: #198754;
+    --info: #0dcaf0;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --white: #ffffff;
+    --font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --border-radius: 0.375rem;
+    --box-shadow-sm: 0 .125rem .25rem rgba(0, 0, 0, .075);
+    --box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+  }
+
+  body {
+    font-family: var(--font-family-sans-serif);
+    background-color: var(--light);
+    color: var(--dark);
+  }
+
+  .booking-container {
+    max-width: 1140px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
+
+  .booking-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .booking-header h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.75rem;
+  }
+
+  .booking-header p {
+    color: var(--gray);
+    font-size: 1.15rem;
+    margin-bottom: 0;
+  }
+
+  /* Improved Booking Steps (Consistent with previous step) */
+  .booking-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4rem;
+    position: relative;
+    padding: 0 1rem;
+  }
+
+  .booking-steps::before {
+    content: "";
+    position: absolute;
+    top: 1.75rem;
+    left: 5%;
+    right: 5%;
+    height: 4px;
+    background-color: var(--gray-light);
+    z-index: 1;
+  }
+
+  .booking-steps-progress {
+    position: absolute;
+    top: 1.75rem;
+    left: 5%;
+    height: 4px;
+    background-color: var(--success);
+    z-index: 2;
+    transition: width 0.4s ease-in-out;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 3;
+    width: 18%;
+  }
+
+  .step-icon-wrapper {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background-color: var(--white);
+    border: 4px solid var(--gray-light);
+    color: var(--gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .step-icon-wrapper i {
+    font-size: 1.5rem;
+  }
+
+  .step.completed .step-icon-wrapper {
+    border-color: var(--success);
+    background-color: var(--success);
+    color: var(--white);
+  }
+
+  .step.active .step-icon-wrapper {
+    border-color: var(--primary);
+    background-color: var(--primary);
+    color: var(--white);
+  }
+
+  .step-label {
+    font-size: 0.9rem;
+    color: var(--gray);
+    font-weight: 500;
+  }
+
+  .step.active .step-label {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .step.completed .step-label {
+    color: var(--success);
+  }
+
+  /* Card Styling (Consistent) */
+  .booking-card {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-sm);
+    border: 1px solid var(--gray-light);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .booking-card:hover {
+    box-shadow: var(--box-shadow);
+  }
+
+  .booking-card-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-light);
+  }
+
+  .booking-card-header h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .booking-card-header p {
+    color: var(--gray);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+  }
+
+  /* Form Elements Improvements */
+  .form-group {
+    margin-bottom: 1.5rem;
+    position: relative; /* For icon positioning */
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.9rem;
+  }
+
+  .input-group-icon {
+      position: absolute;
+      left: 1rem;
+      top: calc(50% + 0.25rem); /* Adjust based on label presence */
+      transform: translateY(-50%);
+      color: var(--gray);
+      pointer-events: none;
+      z-index: 4;
+      line-height: 1;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background-color: var(--white);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .form-control.has-icon {
+      padding-left: 2.8rem;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+    outline: none;
+  }
+
+  .form-control.is-invalid {
+      border-color: var(--danger);
+  }
+  .form-control.is-invalid:focus {
+      box-shadow: 0 0 0 0.2rem rgba(var(--danger-rgb, 220, 53, 69), 0.25);
+  }
+
+  .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 16px 12px;
+      padding-right: 2.5rem;
+  }
+
+  .form-text {
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-top: 0.3rem;
+    display: block;
+  }
+
+  textarea.form-control {
+      min-height: 100px;
+      resize: vertical;
+  }
+
+  /* Error Messages (Consistent) */
+  .error-message {
+    color: var(--danger);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: none; /* Hidden by default */
+    min-height: 1.2em;
+  }
+
+  .error-message.visible {
+    display: block;
+  }
+
+  /* Summary Card (Consistent Sticky) */
+  .summary-card {
+      position: sticky;
+      top: 2rem;
+  }
+
+  .room-summary {
+    background-color: var(--light);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    border: 1px solid var(--gray-light);
+  }
+
+  .room-summary-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--gray-light);
+  }
+
+  .room-image {
+    width: 90px;
+    height: 70px;
+    border-radius: var(--border-radius);
+    object-fit: cover;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+
+  .room-details h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    color: var(--dark);
+  }
+
+  .room-type {
+    color: var(--gray);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .booking-details {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .booking-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .booking-detail-label {
+    color: var(--gray);
+    font-weight: 500;
+  }
+
+  .booking-detail-value {
+    font-weight: 500;
+    color: var(--dark);
+    text-align: right;
+  }
+
+  .price-summary {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed var(--gray-light);
+  }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .price-label {
+    color: var(--gray);
+  }
+
+  .price-value {
+    font-weight: 500;
+    color: var(--dark);
+  }
+
+  .price-row.total {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-light);
+  }
+
+  .price-total {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  /* Action Buttons (Consistent) */
+  .booking-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: var(--border-radius);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+  }
+
+  .btn i {
+      margin-right: 0.5rem;
+      font-size: 1.2em;
+  }
+  .btn .bx-right-arrow-alt {
+      margin-left: 0.5rem;
+      margin-right: 0;
+  }
+
+  .btn-back {
+    background-color: transparent;
+    color: var(--gray);
+    border: 1px solid var(--gray-light);
+  }
+
+  .btn-back:hover {
+    background-color: var(--gray-light);
+    color: var(--dark);
+    border-color: var(--gray);
+  }
+
+  .btn-continue {
+    background-color: var(--primary);
+    color: var(--white);
+  }
+
+  .btn-continue:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.25);
+  }
+
+  .btn-continue:disabled {
+    background-color: var(--secondary);
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* Responsive adjustments (Consistent) */
+  @media (max-width: 992px) {
+    .summary-card {
+        position: static;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .booking-header h1 {
+        font-size: 2.2rem;
+    }
+    .booking-steps {
+        margin-bottom: 3rem;
+    }
+    .step-label {
+        font-size: 0.8rem;
+    }
+    .booking-actions {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+    .btn {
+        width: 100%;
+    }
+  }
+
+  @media (max-width: 576px) {
+      .booking-container {
+          margin-top: 1rem;
+      }
+      .booking-card {
+          padding: 1.5rem;
+      }
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container booking-container py-4">
+  <!-- Booking Header -->
+  <div class="booking-header">
+    <h1>Book Your Stay</h1>
+    <p>Provide your information to complete the booking</p>
+  </div>
+
+  <!-- Booking Steps -->
+  <div class="booking-steps" id="bookingSteps">
+    <!-- Progress Bar -->
+    {# Step 3 of 5: Progress = 5% + (3-1) * (90/4)% = 5% + 2 * 22.5% = 50% #}
+    <div class="booking-steps-progress" id="progressBar" style="width: 50%;"></div>
+    <!-- Steps -->
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class='bx bx-bed'></i></div>
+      <div class="step-label">Select Room</div>
+    </div>
+    <div class="step completed">
+      <div class="step-icon-wrapper"><i class='bx bx-calendar-check'></i></div>
+      <div class="step-label">Choose Dates</div>
+    </div>
+    <div class="step active">
+      <div class="step-icon-wrapper"><i class='bx bx-user'></i></div>
+      <div class="step-label">Guest Details</div>
+    </div>
+    <div class="step">
+      <div class="step-icon-wrapper"><i class='bx bx-credit-card'></i></div>
+      <div class="step-label">Payment</div>
+    </div>
+    <div class="step">
+      <div class="step-icon-wrapper"><i class='bx bx-check-double'></i></div>
+      <div class="step-label">Confirmation</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 mb-4 mb-lg-0">
+      <!-- Guest Information Card -->
+      <div class="booking-card">
+        <div class="booking-card-header">
+          <h2>Guest Information</h2>
+          <p>Please provide the primary guest's contact details.</p>
+        </div>
+
+        <form id="guestInfoForm" method="post" action="{% url 'bookings:payment' %}" novalidate>
+          {% csrf_token %}
+
+          <!-- Hidden fields to pass along booking data -->
+          {# Ensure these values are correctly passed from the previous view context #}
+          <input type="hidden" name="room_id" value="{{ room.id }}" />
+          <input type="hidden" name="check_in_date" value="{{ check_in_date }}" />
+          <input type="hidden" name="check_out_date" value="{{ check_out_date }}" />
+          <input type="hidden" name="num_guests" value="{{ num_guests }}" />
+          <input type="hidden" name="total_price" value="{{ total_price }}" />
+          <input type="hidden" name="nights" value="{{ nights }}" /> {# Pass nights if needed #}
+          <input type="hidden" name="subtotal" value="{{ subtotal }}" /> {# Pass subtotal if needed #}
+          <input type="hidden" name="taxes_fees" value="{{ taxes_fees }}" /> {# Pass taxes if needed #}
+
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="guest_name" class="form-label">Full Name</label>
+                <i class='bx bx-user input-group-icon'></i>
+                <input type="text" id="guest_name" name="guest_name" class="form-control has-icon" value="{{ user.get_full_name|default:'' }}" placeholder="Enter full name" required />
+                <div class="error-message" id="guest_name_error"></div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="guest_email" class="form-label">Email Address</label>
+                <i class='bx bx-envelope input-group-icon'></i>
+                <input type="email" id="guest_email" name="guest_email" class="form-control has-icon" value="{{ user.email|default:'' }}" placeholder="Enter email address" required />
+                <div class="form-text">Booking confirmation will be sent here.</div>
+                <div class="error-message" id="guest_email_error"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="guest_phone" class="form-label">Phone Number</label>
+                <i class='bx bx-phone input-group-icon'></i>
+                <input type="tel" id="guest_phone" name="guest_phone" class="form-control has-icon" placeholder="Enter phone number" required />
+                <div class="form-text">In case we need to contact you.</div>
+                <div class="error-message" id="guest_phone_error"></div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="guest_country" class="form-label">Country</label>
+                <i class='bx bx-globe input-group-icon'></i>
+                {# Consider using a more comprehensive country list library if needed #}
+                <select id="guest_country" name="guest_country" class="form-control form-select has-icon" required>
+                  <option value="" disabled selected>Select your country</option>
+                  <option value="US">United States</option>
+                  <option value="CA">Canada</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="AU">Australia</option>
+                  <option value="DE">Germany</option>
+                  <option value="FR">France</option>
+                  <option value="IT">Italy</option>
+                  <option value="ES">Spain</option>
+                  <option value="JP">Japan</option>
+                  <option value="CN">China</option>
+                  <option value="IN">India</option>
+                  <option value="BR">Brazil</option>
+                  {# Add a separator or more countries #}
+                  <option value="ZZ">Other</option>
+                </select>
+                <div class="error-message" id="guest_country_error"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="special_requests" class="form-label">Special Requests (Optional)</label>
+            <textarea id="special_requests" name="special_requests" class="form-control" rows="3" placeholder="Let us know if you have any special requests (e.g., late check-in, specific room view preference)"></textarea>
+            <div class="form-text">We'll do our best to accommodate, but requests are not guaranteed.</div>
+          </div>
+
+          <div class="booking-actions">
+            {# Use the URL for the previous step (date selection) #}
+            <a href="{% url 'bookings:date_selection' room.id %}" class="btn btn-back">
+              <i class='bx bx-arrow-back'></i> Back to Dates
+            </a>
+            <button type="submit" class="btn btn-continue">
+              Continue to Payment <i class='bx bx-right-arrow-alt'></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Booking Summary Card -->
+      <div class="booking-card summary-card">
+        <div class="booking-card-header">
+          <h2>Booking Summary</h2>
+          <p>Review your stay details</p>
+        </div>
+
+        <div class="room-summary">
+          <div class="room-summary-header">
+            <img src="{{ room.get_image_url }}" alt="{{ room.number }}" class="room-image" />
+            <div class="room-details">
+              <h3>Room {{ room.number }}</h3>
+              <div class="room-type">{{ room.get_room_type_display }}</div>
+            </div>
+          </div>
+
+          <div class="booking-details">
+            <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-calendar-check align-middle me-1'></i> Check-in:</span>
+              <span class="booking-detail-value">{{ check_in_date|date:"D, M d, Y" }}</span>
+            </div>
+            <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-calendar-x align-middle me-1'></i> Check-out:</span>
+              <span class="booking-detail-value">{{ check_out_date|date:"D, M d, Y" }}</span>
+            </div>
+             <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-moon align-middle me-1'></i> Duration:</span>
+              <span class="booking-detail-value">{{ nights }} night{{ nights|pluralize }}</span>
+            </div>
+            <div class="booking-detail">
+              <span class="booking-detail-label"><i class='bx bx-group align-middle me-1'></i> Guests:</span>
+              <span class="booking-detail-value">{{ num_guests }} guest{{ num_guests|pluralize }}</span>
+            </div>
+          </div>
+
+          <div class="price-summary">
+            <div class="price-row">
+              <span class="price-label">Rate ({{ nights }} night{{ nights|pluralize }}):</span>
+              <span class="price-value">${{ subtotal|floatformat:2 }}</span>
+            </div>
+            <div class="price-row">
+              <span class="price-label">Taxes & Fees (Est.):</span>
+              <span class="price-value">${{ taxes_fees|floatformat:2 }}</span>
+            </div>
+            <div class="price-row total">
+              <span class="price-label price-total">Total:</span>
+              <span class="price-value price-total">${{ total_price|floatformat:2 }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const guestInfoForm = document.getElementById("guestInfoForm");
+    if (!guestInfoForm) return; // Exit if form not found
+
+    const inputs = guestInfoForm.querySelectorAll("input[required], select[required]");
+
+    // Basic real-time validation feedback
+    inputs.forEach(input => {
+        input.addEventListener('blur', () => validateInput(input));
+        input.addEventListener('input', () => clearError(input)); // Clear error on typing
+    });
+
+    guestInfoForm.addEventListener("submit", function (e) {
+      let isFormValid = true;
+      inputs.forEach(input => {
+          if (!validateInput(input)) {
+              isFormValid = false;
+          }
+      });
+
+      if (!isFormValid) {
+        e.preventDefault();
+        console.log("Form submission prevented due to validation errors.");
+        // Optionally focus the first invalid input
+        const firstInvalid = guestInfoForm.querySelector('.is-invalid');
+        if (firstInvalid) {
+            firstInvalid.focus();
+        }
+      }
+    });
+
+    function validateInput(input) {
+        clearError(input);
+        let isValid = true;
+        const value = input.value.trim();
+        const errorElementId = input.id + '_error';
+        const errorElement = document.getElementById(errorElementId);
+
+        if (input.hasAttribute('required') && !value) {
+            showError(input, errorElement, "This field is required.");
+            isValid = false;
+        } else if (input.type === 'email' && value && !isValidEmail(value)) {
+            showError(input, errorElement, "Please enter a valid email address.");
+            isValid = false;
+        } else if (input.type === 'tel' && value && !isValidPhone(value)) {
+            // Basic phone validation (e.g., at least 7 digits)
+            showError(input, errorElement, "Please enter a valid phone number.");
+            isValid = false;
+        }
+        // Add other specific validations if needed
+
+        if (isValid) {
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid'); // Optional: Add valid class
+        } else {
+             input.classList.remove('is-valid');
+        }
+        return isValid;
+    }
+
+    function showError(input, errorElement, message) {
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.classList.add('visible');
+        }
+        input.classList.add('is-invalid');
+    }
+
+    function clearError(input) {
+        const errorElementId = input.id + '_error';
+        const errorElement = document.getElementById(errorElementId);
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.classList.remove('visible');
+        }
+        input.classList.remove('is-invalid');
+        // input.classList.remove('is-valid'); // Optionally remove valid class too
+    }
+
+    function isValidEmail(email) {
+        // Basic email regex
+        const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
+    }
+
+    function isValidPhone(phone) {
+        // Basic check: at least 7 digits, allows spaces, dashes, parens
+        const digits = phone.replace(/\D/g, '');
+        return digits.length >= 7;
+    }
+
+    // Update progress bar based on current step (Step 3 of 5)
+    const progressBar = document.getElementById('progressBar');
+    const currentStep = 3;
+    const totalSteps = 5;
+    const progressPercentage = 5 + (currentStep - 1) * (90 / (totalSteps - 1));
+    if (progressBar) {
+        progressBar.style.width = `${progressPercentage}%`;
+    }
+
+  });
+</script>
+{% endblock %}
+

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Booking Confirmation - {{ booking.booking_number }}</title>
+    <!--
+        Note for xhtml2pdf: Google Fonts might not render correctly in all xhtml2pdf setups
+        without specific font embedding configurations. For maximum compatibility,
+        consider using standard web-safe fonts or ensuring your xhtml2pdf environment
+        can access/embed 'Poppins'. If Poppins doesn't work, fallback to Helvetica/Arial.
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm 2cm; /* Top/Bottom, Left/Right */
+        }
+
+        body {
+            font-family: 'Poppins', Helvetica, Arial, sans-serif; /* Fallback fonts important */
+            line-height: 1.6;
+            color: #212529; /* --text-color-dark */
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #007bff; /* --primary-color */
+        }
+
+        .header .company-name {
+            font-size: 32px;
+            font-weight: 700; /* Poppins bold */
+            color: #007bff; /* --primary-color */
+            margin: 0 0 5px 0;
+            letter-spacing: 0.5px;
+        }
+
+        .header .confirmation-title {
+            font-size: 22px;
+            color: #495057; /* --text-color-light */
+            font-weight: 500; /* Poppins medium */
+            margin: 0 0 20px 0;
+        }
+
+        .booking-reference {
+            font-size: 18px;
+            color: #007bff; /* --primary-color */
+            font-weight: 600; /* Poppins semi-bold */
+            background-color: #e7f3ff;
+            padding: 8px 15px;
+            border-radius: 5px; /* xhtml2pdf might have limited border-radius support */
+            display: inline-block;
+        }
+
+        .section {
+            margin-bottom: 35px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600; /* Poppins semi-bold */
+            color: #007bff; /* --primary-color */
+            border-bottom: 1px solid #dee2e6; /* --border-color */
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .detail-row {
+            /* Using floats for better compatibility with xhtml2pdf than flexbox */
+            margin-bottom: 12px;
+            overflow: hidden; /* To contain floats (clearfix) */
+            clear: both; /* Ensure rows don't overlap if previous content floated */
+        }
+
+        .detail-label {
+            float: left;
+            width: 190px; /* Adjusted width */
+            font-weight: 500; /* Poppins medium */
+            color: #6c757d; /* --text-color-muted */
+            padding-right: 10px;
+        }
+
+        .detail-value {
+            /* No float needed, it will flow after the floated label */
+            margin-left: 200px; /*  width of label + padding */
+            color: #212529; /* --text-color-dark */
+            font-weight: 400; /* Poppins regular */
+        }
+        .detail-value strong {
+            font-weight: 500; /* Poppins medium */
+        }
+
+        .total-price-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #dee2e6; /* --border-color */
+            clear: both; /* Ensure it's below any floated content */
+        }
+
+        .total-price {
+            font-size: 20px;
+            color: #007bff; /* --primary-color */
+            font-weight: 700; /* Poppins bold */
+            text-align: right;
+        }
+        .total-price span {
+            font-weight: 500; /* Poppins medium */
+            color: #495057; /* --text-color-light */
+            margin-right: 10px;
+        }
+
+
+        .payment-status {
+            font-weight: 600; /* Poppins semi-bold */
+        }
+        .payment-status.paid {
+            color: #28a745; /* --accent-color */
+        }
+        .payment-status.pending {
+            color: #dc3545; /* Warning red */
+        }
+
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d; /* --text-color-muted */
+            border-top: 1px solid #dee2e6; /* --border-color */
+            padding-top: 25px;
+            clear: both;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div> <!-- Removed class="container" as its screen-specific styles were commented out -->
+        <div class="header">
+            <div class="company-name">HORIZONH</div>
+            <div class="confirmation-title">Booking Confirmation</div>
+            <div class="booking-reference">
+                Booking Reference: {{ booking.booking_number }}
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Booking Details</h3>
+            <div> <!-- Removed class="detail-grid" as flex/grid might not be ideal for xhtml2pdf -->
+                <div class="detail-row">
+                    <div class="detail-label">Check-in Date:</div>
+                    <div class="detail-value">
+                        <strong>{{ booking.check_in_date|date:"l, F d, Y" }}</strong> (from 3:00 PM)
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Check-out Date:</div>
+                    <div class="detail-value">
+                        <strong>{{ booking.check_out_date|date:"l, F d, Y" }}</strong> (by 11:00 AM)
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Duration:</div>
+                    <div class="detail-value">
+                        {{ booking.duration }} night{{ booking.duration|pluralize }}
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Number of Guests:</div>
+                    <div class="detail-value">
+                        {{ booking.num_guests }} guest{{ booking.num_guests|pluralize }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Room Information</h3>
+            <div>
+                <div class="detail-row">
+                    <div class="detail-label">Room Number:</div>
+                    <div class="detail-value">{{ booking.room.number }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Room Type:</div>
+                    <div class="detail-value">{{ booking.room.get_room_type_display }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Floor:</div>
+                    <div class="detail-value">{{ booking.room.floor }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Amenities:</div>
+                    <div class="detail-value">
+                        {% for amenity in booking.room.get_amenity_display %}
+                            {{ amenity }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            Standard amenities included.
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Guest Information</h3>
+            <div>
+                <div class="detail-row">
+                    <div class="detail-label">Guest Name:</div>
+                    <div class="detail-value">{{ booking.guest_name }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value">{{ booking.guest_email }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Phone:</div>
+                    <div class="detail-value">{{ booking.guest_phone }}</div>
+                </div>
+                {% if booking.special_requests %}
+                <div class="detail-row">
+                    <div class="detail-label">Special Requests:</div>
+                    <div class="detail-value">{{ booking.special_requests|linebreaksbr }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Payment Information</h3>
+            <div>
+                <div class="detail-row">
+                    <div class="detail-label">Payment Method:</div>
+                    <div class="detail-value">{{ booking.get_payment_method_display }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Payment Status:</div>
+                    <div class="detail-value">
+                        <span class="payment-status {% if booking.payment_status %}paid{% else %}pending{% endif %}">
+                            {% if booking.payment_status %}Paid{% else %}Pending{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="total-price-section">
+                <div class="total-price">
+                    <span>Total Amount:</span> ${{ booking.total_price|floatformat:2 }}
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Thank you for choosing <strong>HORIZONH</strong> for your stay!</p>
+            <p>This is an official booking confirmation. Please keep it for your records.</p>
+            <p>For any questions or modifications, please contact our customer service at [Your Phone Number] or reply to this email.</p>
+            <p>© {% now "Y" %} HORIZONH. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
