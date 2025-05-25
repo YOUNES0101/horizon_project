@@ -1,11 +1,9 @@
-Django>=4.2.0
-Pillow>=10.0.0  # For image handling
+Django==4.2.0
+Pillow==10.0.0  # For image handling
 python-dotenv==1.0.0
-django-crispy-forms>=2.0  # For better form rendering
-crispy-bootstrap5>=0.7  # Bootstrap 5 template pack for crispy-forms
-django-allauth>=0.54.0  # For user authentication
-django-environ>=0.10.0  # For environment variable management
-mysqlclient>=2.2.0  # MySQL database adapter
-gunicorn>=21.0.0  # For running Django in production
-whitenoise>=6.5.0  # For serving static files
-dj-database-url>=2.0.0  # For database URL parsing
+django-crispy-forms==2.0  # For better form rendering
+crispy-bootstrap5==0.7  # Bootstrap 5 template pack for crispy-forms
+django-allauth==0.54.0  # For user authentication
+mysqlclient==2.2.0  # MySQL database adapter
+whitenoise==6.5.0  # For serving static files
+xhtml2pdf==0.2.11

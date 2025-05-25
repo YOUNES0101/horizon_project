@@ -30,12 +30,13 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-your-secret-key-here')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '<your-username>.pythonanywhere.com']
 
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
-    'http://127.0.0.1:8000'
+    'http://127.0.0.1:8000',
+    'https://<your-username>.pythonanywhere.com'
 ]
 
 
@@ -112,6 +113,7 @@ DATABASES = {
          'PORT': os.getenv('DB_PORT', '3306'),
          'OPTIONS': {
              'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+             'charset': 'utf8mb4',  # Use utf8mb4 for full Unicode support
          }
      }
 }
