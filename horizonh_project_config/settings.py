@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import dj_database_url  # Import for database URL parsing
 
 # Load environment variables from .env file
 load_dotenv()
@@ -31,15 +30,15 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-your-secret-key-here')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*', '.up.railway.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-# For Railway deployment
+# CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.up.railway.app',
-    os.getenv('SITE_URL', 'http://localhost:8000')
+    'http://localhost:8000',
+    'http://127.0.0.1:8000'
 ]
 
-SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
+
 
 # Application definition
 
@@ -102,45 +101,20 @@ WSGI_APPLICATION = 'horizonh_project_config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# Default database configuration using environment variables
-
-# Database configuration
-if os.getenv('DATABASE_URL'):
-    # Parse database URL (Railway provides this)
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-else:
-    # Local development database
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('DB_NAME', 'hotel_db2'),
-            'USER': os.getenv('DB_USER', 'root'),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '3306'),
-        }
-    }
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': os.getenv('DB_NAME', 'hotel_db2'),
-#         'USER': os.getenv('DB_USER', 'root'),
-#         'PASSWORD': os.getenv('DB_PASSWORD', ''),
-#         'HOST': os.getenv('DB_HOST', 'localhost'),
-#         'PORT': os.getenv('DB_PORT', '3306'),
-#     }
-# }
-
-# Override with DATABASE_URL if provided (used by Railway)
-DATABASE_URL = os.getenv('DATABASE_URL')
-if DATABASE_URL:
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+# MySQL database configuration
+DATABASES = {
+     'default': {
+         'ENGINE': 'django.db.backends.mysql',
+         'NAME': os.getenv('DB_NAME', 'hotel_db2'),
+         'USER': os.getenv('DB_USER', 'root'),
+         'PASSWORD': os.getenv('DB_PASSWORD', ''),
+         'HOST': os.getenv('DB_HOST', 'localhost'),
+         'PORT': os.getenv('DB_PORT', '3306'),
+         'OPTIONS': {
+             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+         }
+     }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -186,12 +160,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# If running on Railway or similar, use spaces for media storage
-if not DEBUG:
-    # You may need to setup AWS S3 or other storage services for production media files
-    # For simplicity in the first deployment, we'll use the same setup
-    pass
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
